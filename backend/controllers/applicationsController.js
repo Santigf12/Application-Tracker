@@ -87,8 +87,48 @@ const createApplication = async (req, res) => {
   }
 };
 
+const updateApplication = async (req, res) => {
+  const { id } = req.params;
+  const { title, company, location, length, posting, status } = req.body;
+
+  try {
+    const query = `
+        UPDATE job_applications 
+        SET title = ?, company = ?, location = ?, length = ?, posting = ?, status = ?
+        WHERE id = ?;
+    `;
+
+    await pool.promise().query(query, [title, company, location, length, posting, status, id]);
+
+    return res.status(200).json({ success: true, message: "Application updated" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+}
+
+const deleteApplication = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const query = `
+        DELETE FROM job_applications
+        WHERE id = ?;
+    `;
+
+    await pool.promise().query(query, [id]);
+
+    return res.status(200).json({ success: true, message: "Application deleted" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+}
+
 module.exports = {
     getAllApplications,
     getApplicationbyId,
-    createApplication
+    createApplication,
+    updateApplication,
+    deleteApplication
 };

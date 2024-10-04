@@ -50,6 +50,32 @@ export const createApplication = createAsyncThunk(
   }
 );
 
+//Put update an application
+export const updateApplication = createAsyncThunk(
+  "applications/update",
+  async ({ id, application }, thunkAPI) => {
+    try {
+      return await applicationService.updateApplication(id, application);
+    } catch (error) {
+      const message = error.response.data.message || error.message;
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+//Delete, delete an application
+export const deleteApplication = createAsyncThunk(
+  "applications/delete",
+  async (id, thunkAPI) => {
+    try {
+      return await applicationService.deleteApplication(id);
+    } catch (error) {
+      const message = error.response.data.message || error.message;
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
 
 export const groupSlice = createSlice({
   name: "applications",
@@ -111,6 +137,38 @@ export const groupSlice = createSlice({
         state.isError = true;
         state.message = action.payload;
         state.application = {};
+      })
+      //Update an application
+      .addCase(updateApplication.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(updateApplication.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.isError = false;
+        state.message = action.payload.message;
+      })
+      .addCase(updateApplication.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = false;
+        state.isError = true;
+        state.message = action.payload
+      })
+      //Delete an application
+      .addCase(deleteApplication.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(deleteApplication.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.isError = false;
+        state.message = action.payload.message;
+      })
+      .addCase(deleteApplication.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = false;
+        state.isError = true;
+        state.message = action.payload;
       });
       
   },

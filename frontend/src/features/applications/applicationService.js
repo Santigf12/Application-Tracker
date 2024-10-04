@@ -41,7 +41,35 @@ const createApplication = async (application) => {
   }
 }
 
+//Update application
+const updateApplication = async (id, application) => {
+  try {
+    const response = await axios.put(`${API_URL}/${id}`, application);
+    return response.data;
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: "Internal Server Error" };
+  }
+}
 
-const memberService = { getAllApplications, createApplication, getApplicationById };
+//Delete application
+const deleteApplication = async (id) => {
+  try {
+    const response = await axios.delete(`${API_URL}/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: "Internal Server Error" };
+  }
+}
+
+
+const memberService = { 
+  getAllApplications, 
+  createApplication, 
+  getApplicationById,
+  updateApplication,
+  deleteApplication,
+};
 
 export default memberService;

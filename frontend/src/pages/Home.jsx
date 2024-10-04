@@ -14,8 +14,6 @@ const Home = () => {
         dispatch(getAllApplications());
     }, [dispatch]);
 
-    console.log(applications);
-
 
     return (
         <Container style={{ marginTop: '7em', minWidth: '70%' }}>
