@@ -1,0 +1,16 @@
+FROM node:20-alpine
+WORKDIR /app
+
+#we add backend folder to the path, since the cloud build context is the root of the project within the cloudbuild.yaml
+COPY ./backend/package.json ./
+COPY ./backend/package-lock.json ./
+
+#copy whole backend folder
+COPY ./backend ./
+
+RUN npm install
+
+EXPOSE 3306
+EXPOSE 5000
+
+CMD ["npm", "run", "start"]

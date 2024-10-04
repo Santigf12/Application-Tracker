@@ -1,0 +1,22 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  annotations:
+     run.googleapis.com/launch-stage: BETA
+  name: react-fl2f-forms
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/execution-environment: gen1
+        run.googleapis.com/container-dependencies: "{frontend: [backend]}"
+    spec:
+      containers:
+      - image: gcr.io/fl2f-1/react_fl2f_forms_frontend:latest
+        name: frontend
+        ports:
+          - containerPort: 80
+      - image: gcr.io/fl2f-1/react_fl2f_forms_backend:latest
+        name: backend
+
+
