@@ -3,7 +3,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from 'react-toastify';
 import { Button, Container, Form, Grid, Header, Icon, Popup, Segment, Step } from "semantic-ui-react";
-import { deleteApplication, getApplicationById, updateApplication } from "../features/applications/applicationsSlice";
+import CoverModal from '../components/CoverModal';
+import { deleteApplication, getApplicationById, getCoverLetter, updateApplication } from "../features/applications/applicationsSlice";
 
 const AppDashboard = () => {
     const dispatch = useDispatch();
@@ -13,6 +14,7 @@ const AppDashboard = () => {
     const { application, isLoading, isSuccess, isError } = useSelector((state) => state.applications);
 
     const [editMode, setEditMode] = useState(false);
+    const [modalOpen, setModalOpen] = useState(false);
     const [formData, setFormData] = useState({
         title: "",
         company: "",
@@ -20,12 +22,17 @@ const AppDashboard = () => {
         location: "",
         length: "",
         posting: "",
-        status: ""
+        status: "",
+        coverletter: ""
     });
 
     // Load the application data and set the initial form data
     useEffect(() => {
         dispatch(getApplicationById(id));
+    }, [dispatch, id]);
+
+    useEffect(() => {
+        dispatch(getCoverLetter(id))
     }, [dispatch, id]);
 
     useEffect(() => {
@@ -37,7 +44,8 @@ const AppDashboard = () => {
                 location: application.location || "",
                 length: application.length || "",
                 posting: application.posting || "",
-                status: application.status || "Bookmarked"  // Default status to "Bookmarked"
+                status: application.status || "Bookmarked",  // Default status to "Bookmarked"
+                coverletter: application.coverletter || ""
             });
         }
     }, [application]);
@@ -117,7 +125,13 @@ const AppDashboard = () => {
                                 </Button.Group>
                             </Grid.Column >
                             <Grid.Column >
-                                <Button fluid color='green'>Generate Cover Letter</Button>
+                                {
+                                    formData.coverletter === 1 ? (
+                                        <Button fluid color='green' onClick={() => setModalOpen(true)}>View Cover Letter</Button>
+                                    ) : (
+                                        <Button fluid color='orange' >Create Cover Letter</Button>
+                                    )
+                                }
                             </Grid.Column>
                             <Grid.Column>
                                 <Popup
@@ -222,6 +236,12 @@ const AppDashboard = () => {
                         </Form.Group>
                     </Form>
                 </Segment>
+                <CoverModal
+                open={modalOpen}
+                onClose={() => setModalOpen(false)}
+                company={formData.company}
+                posting={formData.posting}
+                / >
             </Segment>
         </Container>
     );

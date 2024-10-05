@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { Container, Form, Header, Message, Segment } from "semantic-ui-react";
+import { toast } from "react-toastify";
+import { Container, Form, Header, Segment } from "semantic-ui-react";
 import { createApplication } from "../features/applications/applicationsSlice";
 
 const CreateApplication = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    const {isLoading, isError, isSuccess, message } = useSelector((state) => state.applications);
+    const {isLoading } = useSelector((state) => state.applications);
     const [application, setApplication] = useState({
         title: "",
         company: "",
@@ -22,11 +23,13 @@ const CreateApplication = () => {
 
         try {
             await dispatch(createApplication(application)).unwrap();
+            toast.success("Application created successfully!");
             setTimeout(() => {
                 navigate('/');
             }, 750);
         } catch (error) {
             console.error(error);
+            toast.error("Failed to create application");
         }
     }
 
@@ -99,22 +102,6 @@ const CreateApplication = () => {
                                 onChange={(e) => setApplication({ ...application, posting: e.target.value })}
                             />
                         </Form.Group>
-                        {
-                            isError && (
-                                <Message negative>
-                                    <Message.Header>Error</Message.Header>
-                                    <p>{message}</p>
-                                </Message>
-                            )
-                        }
-                        {
-                            isSuccess && (
-                                <Message positive>
-                                    <Message.Header>Success</Message.Header>
-                                    <p>Job application created successfully</p>
-                                </Message>
-                            )
-                        }
                         <Form.Button size="large" fluid color='blue'>Submit</Form.Button>
                     </Form>
                 </Segment>

@@ -1,12 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
 import aplicationReducer from "../features/applications/applicationsSlice";
-import memberReducer from "../features/members/memberSlice";
-import surveyReducer from "../features/survey/surveySlice";
+import filesReducer from "../features/files/filesSlice";
+import toolsReducer from "../features/tools/toolsSlice";
 
 export const store = configureStore({
   reducer: {
     applications: aplicationReducer,
-    members: memberReducer,
-    surveys: surveyReducer,
+    tools: toolsReducer,
+    files: filesReducer,
   },
 });

@@ -4,6 +4,7 @@ import applicationService from "./applicationService";
 const initialState = {
   applications: [],
   application: {},
+  coverletter: "",
   isError: false,
   isSuccess: false,
   isLoading: false,
@@ -71,6 +72,30 @@ export const deleteApplication = createAsyncThunk(
       return await applicationService.deleteApplication(id);
     } catch (error) {
       const message = error.response.data.message || error.message;
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+export const saveCoverLetter = createAsyncThunk(
+  "applications/saveCoverLetter",
+  async ({ id, content }, thunkAPI) => {
+    try {
+      return await applicationService.saveCoverLetter(id, content);
+    } catch (error) {
+      const message = error.response?.data?.message || error.message;
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+export const getCoverLetter = createAsyncThunk(
+  "applications/getCoverLetter",
+  async (id, thunkAPI) => {
+    try {
+      return await applicationService.getCoverLetter(id);
+    } catch (error) {
+      const message = error.response?.data?.message || error.message;
       return thunkAPI.rejectWithValue(message);
     }
   }
@@ -169,8 +194,41 @@ export const groupSlice = createSlice({
         state.isSuccess = false;
         state.isError = true;
         state.message = action.payload;
+      })
+      //Save a cover letter
+      .addCase(saveCoverLetter.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(saveCoverLetter.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.isError = false;
+        state.message = action.payload.message;
+      })
+      .addCase(saveCoverLetter.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+      //Get a cover letter
+      .addCase(getCoverLetter.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getCoverLetter.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.isError = false;
+        state.message = "";
+        state.coverletter = action.payload.content;
+      })
+      .addCase(getCoverLetter.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = false;
+        state.isError = true;
+        state.message = action.payload;
+        state.coverletter = "";
       });
-      
   },
 });
 

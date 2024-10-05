@@ -2,10 +2,10 @@ import axios from "axios";
 
 let API_URL = "";
 if (process.env.NODE_ENV !== "production") {
-  API_URL = "http://localhost:5000/api/applications/"; // lets us use the backend server in local development
+  API_URL = "http://localhost:5000/api/applications"; // lets us use the backend server in local development
 }
 else {
-  API_URL = "/api/applications/";
+  API_URL = "/api/applications";
 }
 
 // GET all applications
@@ -63,13 +63,35 @@ const deleteApplication = async (id) => {
   }
 }
 
+const saveCoverLetter = async (id, content) => {
+  try {
+    const response = await axios.post(`${API_URL}/${id}`, { content });
+    return response.data;
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: "Internal Server Error" };
+  }
+};
 
-const memberService = { 
+const getCoverLetter = async (id) => {
+  try {
+    const response = await axios.get(`${API_URL}/cover-letter/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: "Internal Server Error" };
+  }
+}
+
+
+const applicationService = { 
   getAllApplications, 
   createApplication, 
   getApplicationById,
   updateApplication,
   deleteApplication,
+  saveCoverLetter,
+  getCoverLetter
 };
 
-export default memberService;
+export default applicationService;

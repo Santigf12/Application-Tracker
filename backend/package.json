@@ -34,6 +34,7 @@
     "morgan": "^1.10.0",
     "mysql2": "^3.9.7",
     "odf": "^2.3.2",
+    "openai": "^4.67.1",
     "pdf-lib": "^1.17.1",
     "puppeteer": "^23.4.1",
     "streamifier": "^0.1.1"

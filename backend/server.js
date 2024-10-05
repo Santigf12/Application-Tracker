@@ -27,6 +27,7 @@ app.use(
 
 app.use("/api/applications", require("./routes/applicationsRoutes")); //working
 app.use("/api/pdf", require("./routes/pdfRoutes")); // New route for PDF generation
+app.use("/api/tools", require("./routes/toolsRoutes")); // New route for tools
 
 
 // set up server to listen on specific port

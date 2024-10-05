@@ -51,7 +51,8 @@ const getApplicationbyId = async (req, res) => {
             CAST(added AS CHAR) AS added, 
             CAST(applied AS CHAR) AS applied, 
             status, 
-            posting 
+            posting,
+            coverletter
         FROM job_applications
         WHERE id = ?;
     `;
@@ -125,10 +126,57 @@ const deleteApplication = async (req, res) => {
   }
 }
 
+const saveCoverLetter = async (req, res) => {
+  const { content } = req.body;
+  const { id } = req.params;
+
+  console.log("content in controller", content);
+
+  if (!content) {
+    return res.status(400).json({ success: false, message: "Content cannot be empty" });
+  }
+
+  try {
+    // Save the cover letter copy to the database
+    const query = `INSERT INTO cover_letters (id, content) VALUES (?, ?) ON DUPLICATE KEY UPDATE content = VALUES(content)`;
+    await pool.promise().query(query, [id, content]);
+
+    // Update the cover letter flag in job_applications
+    const query2 = `UPDATE job_applications SET coverletter = 1 WHERE id = ?`;
+    await pool.promise().query(query2, [id]);
+
+    return res.status(200).json({ success: true, message: "Cover letter saved" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+const getCoverLetter = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const query = `SELECT content FROM cover_letters WHERE id = ?`;
+    const [result] = await pool.promise().query(query, [id]);
+
+    if (result.length === 0) {
+      return res.status(404).json({ success: false, message: "Cover letter not found" });
+    }
+
+    return res.status(200).json({ success: true, content: result[0].content });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+
 module.exports = {
     getAllApplications,
     getApplicationbyId,
     createApplication,
     updateApplication,
-    deleteApplication
+    deleteApplication,
+    saveCoverLetter,
+    getCoverLetter
 };

@@ -5,13 +5,17 @@ const { getAllApplications,
     getApplicationbyId,
     createApplication,
     updateApplication,
-    deleteApplication
+    deleteApplication,
+    saveCoverLetter,
+    getCoverLetter
 
 } = require("../controllers/applicationsController");
 
 router.route("/").get(getAllApplications).post(createApplication);
 
-router.route("/:id").get(getApplicationbyId).put(updateApplication).delete(deleteApplication);
+router.route("/cover-letter/:id").get(getCoverLetter);
+
+router.route("/:id").get(getApplicationbyId).put(updateApplication).delete(deleteApplication).post(saveCoverLetter);
 
 
 module.exports = router;

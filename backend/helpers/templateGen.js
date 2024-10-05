@@ -64,11 +64,11 @@ const generateCoverLetterODT = async (email, company, content) => {
         zip.file('content.xml', contentXml);
 
         // Generate the new ODT file
-        const newOdtBytes = await zip.generateAsync({ type: 'nodebuffer' });
-        const outputFilePath = path.join(outputPath, `Cover_Letter_${company}.odt`);
-        fs.writeFileSync(outputFilePath, newOdtBytes);
+        // Generate the new ODT file as a buffer
+        const odtBuffer = await zip.generateAsync({ type: 'nodebuffer' });
 
-        return outputFilePath; // Return the path of the generated ODT file
+        // Return the ODT file buffer
+        return odtBuffer;
     } catch (error) {
         console.error('Error generating cover letter:', error);
         throw new Error('Failed to generate ODT');
