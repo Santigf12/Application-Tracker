@@ -2,46 +2,77 @@ name: Build and Push Docker Images
 
 on:
   push:
-    branches:
-      - main  # You can change this to the branch you want to trigger the workflow on
+    branches: ['main']  # Adjust to the branch you'd like to trigger this workflow
+
+env:
+  REGISTRY: ghcr.io
+  BACKEND_IMAGE_NAME: ${{ github.repository }}-backend
+  FRONTEND_IMAGE_NAME: ${{ github.repository }}-frontend
 
 jobs:
-  build:
+  build-and-push-images:
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+      
     steps:
-    # Checkout the repository
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    # Set up Docker Buildx for multi-platform builds
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-    # Log in to GitHub Container Registry (GHCR)
-    - name: Log in to GitHub Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+      # Build and push backend image
+      - name: Extract backend metadata (tags, labels)
+        id: backend-meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}
 
-    # Build backend image
-    - name: Build and push backend Docker image
-      run: |
-        docker build -t ghcr.io/santigf12/job-tracker-backend:latest \
-        --build-arg DATABASE=${{ secrets.DATABASE }} \
-        --build-arg DATABASE_USER=${{ secrets.DATABASE_USER }} \
-        --build-arg DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }} \
-        --build-arg DATABASE_HOST=${{ secrets.DATABASE_HOST }} \
-        --build-arg DATABASE_PORT=${{ secrets.DATABASE_PORT }} \
-        --build-arg OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
-        --build-arg OPENAI_ORG_ID=${{ secrets.OPENAI_ORG_ID }} \
-        -f Dockerfile.backend .
-        docker push ghcr.io/santigf12/job-tracker-backend:latest
+      - name: Build and push backend Docker image
+        id: backend-push
+        uses: docker/build-push-action@v4
+        with:
+          context: .  # Main directory as context
+          push: true
+          file: ./Dockerfile.backend  # Specify the Dockerfile for backend
+          tags: ${{ steps.backend-meta.outputs.tags }}
+          labels: ${{ steps.backend-meta.outputs.labels }}
 
-    # Build frontend image
-    - name: Build and push frontend Docker image
-      run: |
-        docker build -t ghcr.io/santigf12/job-tracker-frontend:latest -f Dockerfile.frontend .
-        docker push ghcr.io/santigf12/job-tracker-frontend:latest
+      # Build and push frontend image
+      - name: Extract frontend metadata (tags, labels)
+        id: frontend-meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}
+
+      - name: Build and push frontend Docker image
+        id: frontend-push
+        uses: docker/build-push-action@v4
+        with:
+          context: .  # Main directory as context
+          push: true
+          file: ./Dockerfile.frontend  # Specify the Dockerfile for frontend
+          tags: ${{ steps.frontend-meta.outputs.tags }}
+          labels: ${{ steps.frontend-meta.outputs.labels }}
+
+      - name: Generate artifact attestation for backend
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}
+          subject-digest: ${{ steps.backend-push.outputs.digest }}
+          push-to-registry: true
+
+      - name: Generate artifact attestation for frontend
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}
+          subject-digest: ${{ steps.frontend-push.outputs.digest }}
+          push-to-registry: true
