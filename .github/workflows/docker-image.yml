@@ -53,7 +53,7 @@ jobs:
             OPENAI_ORG_ID=${{ secrets.OPENAI_ORG_ID }}
           tags: |
             ${{ steps.backend-meta.outputs.tags }}
-            ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:latest  # Add latest tag
+            ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:latest
           labels: ${{ steps.backend-meta.outputs.labels }}
 
       # Build and push frontend image
@@ -72,7 +72,7 @@ jobs:
           file: ./Dockerfile.frontend  # Specify the Dockerfile for frontend
           tags: |
             ${{ steps.frontend-meta.outputs.tags }}
-            ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:latest  # Add latest tag
+            ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:latest
           labels: ${{ steps.frontend-meta.outputs.labels }}
 
       - name: Generate artifact attestation for backend
