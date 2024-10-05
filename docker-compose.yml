@@ -1,6 +1,6 @@
 services:
   backend:
-    image: ghcr.io/santigf12/job-tracker-backend:latest 
+    image: ghcr.io/santigf12/application-tracker-backend:latest
     expose:
       - "5000"
       
@@ -11,7 +11,7 @@ services:
       - default ##default network within the stack
     
   frontend:
-    image: ghcr.io/santigf12/job-tracker-frontend:latest
+    image: ghcr.io/santigf12/application-tracker-frontend:latest
     ports:
       - "5857:3000"
 
@@ -20,7 +20,7 @@ services:
     
     depends_on:
       - backend
-      
+
 networks:
   default:
     driver: bridge

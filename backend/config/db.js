@@ -8,14 +8,7 @@ let pool;
 
 const connectDB = async () => {
     try {
-
-      console.log({
-        host: process.env.DATABASE_HOST,
-        user: process.env.DATABASE_USER,
-        database: process.env.DATABASE,
-        port: process.env.DATABASE_PORT
-      });
-
+      
       pool = mysql.createPool({
         host: process.env.DATABASE_HOST,
         user: process.env.DATABASE_USER,

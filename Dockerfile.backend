@@ -1,24 +1,6 @@
 FROM node:20-alpine
 WORKDIR /app
 
-# Accept build arguments
-ARG DATABASE
-ARG DATABASE_USER
-ARG DATABASE_PASSWORD
-ARG DATABASE_HOST
-ARG DATABASE_PORT
-ARG OPENAI_API_KEY
-ARG OPENAI_ORG_ID
-
-# Set environment variables using the build arguments
-ENV DATABASE=${DATABASE}
-ENV DATABASE_USER=${DATABASE_USER}
-ENV DATABASE_PASSWORD=${DATABASE_PASSWORD}
-ENV DATABASE_HOST=${DATABASE_HOST}
-ENV DATABASE_PORT=${DATABASE_PORT}
-ENV OPENAI_API_KEY=${OPENAI_API_KEY}
-ENV OPENAI_ORG_ID=${OPENAI_ORG_ID}
-
 # Copy the package files and install dependencies
 COPY ./backend/package.json ./
 COPY ./backend/package-lock.json ./
