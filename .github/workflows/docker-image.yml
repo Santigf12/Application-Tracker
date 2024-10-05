@@ -1,0 +1,47 @@
+name: Build and Push Docker Images
+
+on:
+  push:
+    branches:
+      - main  # You can change this to the branch you want to trigger the workflow on
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Checkout the repository
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # Set up Docker Buildx for multi-platform builds
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    # Log in to GitHub Container Registry (GHCR)
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    # Build backend image
+    - name: Build and push backend Docker image
+      run: |
+        docker build -t ghcr.io/${{ github.repository_owner }}/job-tracker-backend:latest \
+        --build-arg DATABASE=${{ secrets.DATABASE }} \
+        --build-arg DATABASE_USER=${{ secrets.DATABASE_USER }} \
+        --build-arg DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }} \
+        --build-arg DATABASE_HOST=${{ secrets.DATABASE_HOST }} \
+        --build-arg DATABASE_PORT=${{ secrets.DATABASE_PORT }} \
+        --build-arg OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
+        --build-arg OPENAI_ORG_ID=${{ secrets.OPENAI_ORG_ID }} \
+        -f Dockerfile.backend .
+        docker push ghcr.io/${{ github.repository_owner }}/job-tracker-backend:latest
+
+    # Build frontend image
+    - name: Build and push frontend Docker image
+      run: |
+        docker build -t ghcr.io/${{ github.repository_owner }}/job-tracker-frontend:latest -f Dockerfile.frontend .
+        docker push ghcr.io/${{ github.repository_owner }}/job-tracker-frontend:latest
