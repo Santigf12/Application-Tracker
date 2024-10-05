@@ -17,7 +17,7 @@ jobs:
       packages: write
       attestations: write
       id-token: write
-      
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -43,6 +43,14 @@ jobs:
           context: .  # Main directory as context
           push: true
           file: ./Dockerfile.backend  # Specify the Dockerfile for backend
+          build-args: >-
+            DATABASE=${{ secrets.DATABASE }}
+            DATABASE_USER=${{ secrets.DATABASE_USER }}
+            DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
+            DATABASE_HOST=${{ secrets.DATABASE_HOST }}
+            DATABASE_PORT=${{ secrets.DATABASE_PORT }}
+            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+            OPENAI_ORG_ID=${{ secrets.OPENAI_ORG_ID }}
           tags: ${{ steps.backend-meta.outputs.tags }}
           labels: ${{ steps.backend-meta.outputs.labels }}
 
