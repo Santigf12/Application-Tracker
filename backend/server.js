@@ -4,6 +4,9 @@ const morgan = require("morgan");
 require("dotenv").config();
 
 const app = express();
+console.log(process.env.DATABASE_HOST);
+console.log(process.env.DATABASE_USER);
+console.log(process.env.DATABASE_PORT);
 
 // middleware
 app.use(morgan("combined")); // log requests to the console
