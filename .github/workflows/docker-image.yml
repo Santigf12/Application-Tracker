@@ -6,8 +6,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  BACKEND_IMAGE_NAME: ${{ github.repository }}-backend
-  FRONTEND_IMAGE_NAME: ${{ github.repository }}-frontend
+  BACKEND_IMAGE_NAME: santigf12/application-tracker-backend
+  FRONTEND_IMAGE_NAME: santigf12/application-tracker-frontend
 
 jobs:
   build-and-push-images:
