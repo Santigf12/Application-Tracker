@@ -51,7 +51,9 @@ jobs:
             DATABASE_PORT=${{ secrets.DATABASE_PORT }}
             OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
             OPENAI_ORG_ID=${{ secrets.OPENAI_ORG_ID }}
-          tags: ${{ steps.backend-meta.outputs.tags }}
+          tags: |
+            ${{ steps.backend-meta.outputs.tags }}
+            ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:latest  # Add latest tag
           labels: ${{ steps.backend-meta.outputs.labels }}
 
       # Build and push frontend image
@@ -68,7 +70,9 @@ jobs:
           context: .  # Main directory as context
           push: true
           file: ./Dockerfile.frontend  # Specify the Dockerfile for frontend
-          tags: ${{ steps.frontend-meta.outputs.tags }}
+          tags: |
+            ${{ steps.frontend-meta.outputs.tags }}
+            ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:latest  # Add latest tag
           labels: ${{ steps.frontend-meta.outputs.labels }}
 
       - name: Generate artifact attestation for backend

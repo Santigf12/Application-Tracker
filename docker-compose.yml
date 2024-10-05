@@ -1,0 +1,27 @@
+services:
+  backend:
+    image: ghcr.io/santigf12/job-tracker-backend:latest 
+    expose:
+      - "5000"
+      
+    environment:
+      - NODE_ENV=production 
+
+    networks:
+      - default ##default network within the stack
+    
+  frontend:
+    image: ghcr.io/santigf12/job-tracker-frontend:latest
+    ports:
+      - "5857:3000"
+
+    networks:
+      - default
+    
+    depends_on:
+      - backend
+      
+networks:
+  default:
+    driver: bridge
+
