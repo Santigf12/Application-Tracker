@@ -29,7 +29,7 @@ jobs:
     # Build backend image
     - name: Build and push backend Docker image
       run: |
-        docker build -t ghcr.io/${{ github.repository_owner }}/job-tracker-backend:latest \
+        docker build -t ghcr.io/santigf12/job-tracker-backend:latest \
         --build-arg DATABASE=${{ secrets.DATABASE }} \
         --build-arg DATABASE_USER=${{ secrets.DATABASE_USER }} \
         --build-arg DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }} \
@@ -38,10 +38,10 @@ jobs:
         --build-arg OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
         --build-arg OPENAI_ORG_ID=${{ secrets.OPENAI_ORG_ID }} \
         -f Dockerfile.backend .
-        docker push ghcr.io/${{ github.repository_owner }}/job-tracker-backend:latest
+        docker push ghcr.io/santigf12/job-tracker-backend:latest
 
     # Build frontend image
     - name: Build and push frontend Docker image
       run: |
-        docker build -t ghcr.io/${{ github.repository_owner }}/job-tracker-frontend:latest -f Dockerfile.frontend .
-        docker push ghcr.io/${{ github.repository_owner }}/job-tracker-frontend:latest
+        docker build -t ghcr.io/santigf12/job-tracker-frontend:latest -f Dockerfile.frontend .
+        docker push ghcr.io/santigf12/job-tracker-frontend:latest
