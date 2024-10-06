@@ -1,13 +1,20 @@
 FROM node:20-alpine
 WORKDIR /app
 
+# Install necessary dependencies
 RUN apk add --no-cache \
     chromium \
     nss \
     freetype \
     harfbuzz \
     ca-certificates \
-    ttf-freefont
+    ttf-freefont \
+    udev \
+    bash \
+    libc6-compat
+
+# Set environment variable for Puppeteer to use the installed version of Chromium
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Copy the package files and install dependencies
 COPY ./backend/package.json ./
