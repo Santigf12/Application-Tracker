@@ -11,7 +11,7 @@ const Home = () => {
     const { applications, isLoading } = useSelector((state) => state.applications);
 
     const [sortedColumn, setSortedColumn] = useState('added');
-    const [sortDirection, setSortDirection] = useState('ascending');
+    const [sortDirection, setSortDirection] = useState('descending');
     const [sortedApplications, setSortedApplications] = useState([]);
 
     useEffect(() => {
