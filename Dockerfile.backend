@@ -1,6 +1,14 @@
 FROM node:20-alpine
 WORKDIR /app
 
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont
+
 # Copy the package files and install dependencies
 COPY ./backend/package.json ./
 COPY ./backend/package-lock.json ./
