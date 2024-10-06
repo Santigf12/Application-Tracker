@@ -59,18 +59,20 @@ const AppDashboard = () => {
 
     // Set the date added and date applied using Luxon
     useEffect(() => {
-        if (application.applied && application.added) {
+        if (application.added) {
             // Assuming application.dateAdded and application.dateApplied are in '2024-09-24 13:51:00' format
-
             const dateAdded = DateTime.fromFormat(application?.added, 'yyyy-MM-dd HH:mm:ss').toFormat('yyyy-MM-dd');
-            const dateApplied = DateTime.fromFormat(application?.applied, 'yyyy-MM-dd HH:mm:ss').toFormat('yyyy-MM-dd');
-
             const timeAdded = DateTime.fromFormat(application?.added, 'yyyy-MM-dd HH:mm:ss').toFormat('HH:mm');
-            const timeApplied = DateTime.fromFormat(application?.applied, 'yyyy-MM-dd HH:mm:ss').toFormat('HH:mm');
 
             setDateAdded(dateAdded);
-            setDateApplied(dateApplied);
             setTimeAdded(timeAdded);
+
+        } else if (application.applied) {
+
+            const dateApplied = DateTime.fromFormat(application?.applied, 'yyyy-MM-dd HH:mm:ss').toFormat('yyyy-MM-dd');
+            const timeApplied = DateTime.fromFormat(application?.applied, 'yyyy-MM-dd HH:mm:ss').toFormat('HH:mm');
+
+            setDateApplied(dateApplied);
             setTimeApplied(timeApplied);
         }
     }, [application]);
@@ -126,20 +128,30 @@ const AppDashboard = () => {
     // Handle form submission
     const handleFormSubmit = async () => {
         try {
-            // modify dates fortmat to match  '2024-09-24 13:51:00' format using luxon
-            const addedDateTime = DateTime.fromFormat(`${dateAdded} ${timeAdded}`, 'yyyy-MM-dd HH:mm');
-            const appliedDateTime = DateTime.fromFormat(`${dateApplied} ${timeApplied}`, 'yyyy-MM-dd HH:mm');
-
-            // Format the DateTime objects into 'yyyy-MM-dd HH:mm:ss' for submission
-            const added = addedDateTime.toFormat('yyyy-MM-dd HH:mm:ss');
-            const applied = appliedDateTime.toFormat('yyyy-MM-dd HH:mm:ss');
-
+            // Define variables for added and applied dates
+            let added = null;
+            let applied = null;
+    
+            // Check if both date and time are provided for "added"
+            if (dateAdded && timeAdded) {
+                const addedDateTime = DateTime.fromFormat(`${dateAdded} ${timeAdded}`, 'yyyy-MM-dd HH:mm');
+                added = addedDateTime.toFormat('yyyy-MM-dd HH:mm:ss');
+            }
+    
+            // Check if both date and time are provided for "applied"
+            if (dateApplied && timeApplied) {
+                const appliedDateTime = DateTime.fromFormat(`${dateApplied} ${timeApplied}`, 'yyyy-MM-dd HH:mm');
+                applied = appliedDateTime.toFormat('yyyy-MM-dd HH:mm:ss');
+            }
+    
+            // Prepare updated form data
             const updatedFormData = {
                 ...formData,
-                added: added,
-                applied: applied,
+                added: added,   // Will be null if no date or time is provided
+                applied: applied,  // Will be null if no date or time is provided
             };
-
+    
+            // Dispatch the update with the updated form data
             await dispatch(updateApplication({ id, application: updatedFormData })).unwrap();
             setEditMode(false); // Disable edit mode after updating
             await dispatch(getApplicationById(id)).unwrap(); // Reload the application data
@@ -148,6 +160,7 @@ const AppDashboard = () => {
             toast.error("An error occurred. Please try again.");
         }
     };
+    
 
     const handleDelete = async () => {
         try {
