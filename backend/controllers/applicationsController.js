@@ -131,8 +131,6 @@ const saveCoverLetter = async (req, res) => {
   const { content } = req.body;
   const { id } = req.params;
 
-  console.log("content in controller", content);
-
   if (!content) {
     return res.status(400).json({ success: false, message: "Content cannot be empty" });
   }

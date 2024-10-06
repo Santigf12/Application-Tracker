@@ -15,7 +15,7 @@ const createCoverLetter = async (req, res) => {
         const odtBuffer = await generateCoverLetterODT(email, company, content);
 
         // Set the headers for ODT file download
-        res.setHeader('Content-Disposition', `attachment; filename=Cover_Letter_${company}.odt`);
+        res.setHeader('Content-Disposition', `attachment; filename=Cover Letter.odt`);
         res.setHeader('Content-Type', 'application/vnd.oasis.opendocument.text');
         
         // Send the buffer directly as the response
