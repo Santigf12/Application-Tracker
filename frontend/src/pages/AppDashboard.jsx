@@ -76,6 +76,22 @@ const AppDashboard = () => {
         }));
     }, []);
 
+    const handleDateChange = useCallback((e, { name, value }) => {
+        if (name === 'dateadded') {
+            setDateAdded(value);
+        } else if (name === 'dateapplied') {
+            setDateApplied(value);
+        }
+    }, []);
+
+    const handleTimeChange = useCallback((e, { name, value }) => {
+        if (name === 'timeadded') {
+            setTimeAdded(value);
+        } else if (name === 'timeapplied') {
+            setTimeApplied(value);
+        }
+    }, []);
+
     const handleFormSubmit = useCallback(async () => {
         try {
             const added = formatDateTime(dateAdded, timeAdded);
@@ -177,7 +193,7 @@ const AppDashboard = () => {
                                 label='Date Added'
                                 name="dateadded"
                                 value={dateAdded}
-                                onChange={handleInputChange}
+                                onChange={handleDateChange}
                                 readOnly={!editMode}
                             />
                             <Form.Input
@@ -185,7 +201,7 @@ const AppDashboard = () => {
                                 label='Time Added'
                                 name="timeadded"
                                 value={timeAdded}
-                                onChange={handleInputChange}
+                                onChange={handleTimeChange}
                                 readOnly={!editMode}
                             />
                             <Form.Input
@@ -193,7 +209,7 @@ const AppDashboard = () => {
                                 label='Date Applied'
                                 name="dateapplied"
                                 value={dateApplied}
-                                onChange={handleInputChange}
+                                onChange={handleDateChange}
                                 readOnly={!editMode}
                             />
                             <Form.Input
@@ -201,7 +217,7 @@ const AppDashboard = () => {
                                 label='Time Applied'
                                 name="timeapplied"
                                 value={timeApplied}
-                                onChange={handleInputChange}
+                                onChange={handleTimeChange}
                                 readOnly={!editMode}
                             />
                         </Form.Group>
