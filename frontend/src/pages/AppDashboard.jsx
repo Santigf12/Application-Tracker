@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon';
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from 'react-toastify';
@@ -7,19 +7,17 @@ import { Button, Container, Form, Grid, Header, Icon, Popup, Segment, Step } fro
 import CoverModal from '../components/CoverModal';
 import { deleteApplication, getApplicationById, getCoverLetter, updateApplication } from "../features/applications/applicationsSlice";
 
+// Utility function to format and parse date
+const formatDateTime = (date, time) => {
+    return date && time ? DateTime.fromFormat(`${date} ${time}`, 'yyyy-MM-dd HH:mm').toFormat('yyyy-MM-dd HH:mm:ss') : null;
+};
+
 const AppDashboard = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
-
     const { id } = useParams();
-    const { application, isLoading, isSuccess, isError } = useSelector((state) => state.applications);
+    const { application, isLoading } = useSelector((state) => state.applications);
 
-    const [dateAdded, setDateAdded] = useState("");
-    const [dateApplied, setDateApplied] = useState("");
-    const [timeAdded, setTimeAdded] = useState("");
-    const [timeApplied, setTimeApplied] = useState("");
-    const [editMode, setEditMode] = useState(false);
-    const [modalOpen, setModalOpen] = useState(false);
     const [formData, setFormData] = useState({
         title: "",
         company: "",
@@ -27,17 +25,20 @@ const AppDashboard = () => {
         location: "",
         length: "",
         posting: "",
-        status: "",
+        status: "Bookmarked",  // Default to Bookmarked
         coverletter: ""
     });
 
-    // Load the application data and set the initial form data
-    useEffect(() => {
-        dispatch(getApplicationById(id));
-    }, [dispatch, id]);
+    const [editMode, setEditMode] = useState(false);
+    const [modalOpen, setModalOpen] = useState(false);
+    const [dateAdded, setDateAdded] = useState("");
+    const [timeAdded, setTimeAdded] = useState("");
+    const [dateApplied, setDateApplied] = useState("");
+    const [timeApplied, setTimeApplied] = useState("");
 
     useEffect(() => {
-        dispatch(getCoverLetter(id))
+        dispatch(getApplicationById(id));
+        dispatch(getCoverLetter(id));
     }, [dispatch, id]);
 
     useEffect(() => {
@@ -49,123 +50,47 @@ const AppDashboard = () => {
                 location: application.location || "",
                 length: application.length || "",
                 posting: application.posting || "",
-                status: application.status || "Bookmarked",  // Default status to "Bookmarked"
+                status: application.status || "Bookmarked",
                 coverletter: application.coverletter || ""
             });
-        }
-    }, [application]);
 
-    console.log(application.applied);
-
+            if (application?.added) {
+                const addedDate = DateTime.fromFormat(application.added, 'yyyy-MM-dd HH:mm:ss');
+                setDateAdded(addedDate.toFormat('yyyy-MM-dd'));
+                setTimeAdded(addedDate.toFormat('HH:mm'));
+            }
     
-
-    // Set the date added and date applied using Luxon
-    useEffect(() => {
-        if (application.added) {
-            // Assuming application.dateAdded and application.dateApplied are in '2024-09-24 13:51:00' format
-            const dateAdded = DateTime.fromFormat(application?.added, 'yyyy-MM-dd HH:mm:ss').toFormat('yyyy-MM-dd');
-            const timeAdded = DateTime.fromFormat(application?.added, 'yyyy-MM-dd HH:mm:ss').toFormat('HH:mm');
-
-            setDateAdded(dateAdded);
-            setTimeAdded(timeAdded);
-
-        } 
-        if (application.applied) {
-
-            const dateApplied = DateTime.fromFormat(application?.applied, 'yyyy-MM-dd HH:mm:ss').toFormat('yyyy-MM-dd');
-            const timeApplied = DateTime.fromFormat(application?.applied, 'yyyy-MM-dd HH:mm:ss').toFormat('HH:mm');
-
-            setDateApplied(dateApplied);
-            setTimeApplied(timeApplied);
+            if (application?.applied) {
+                const appliedDate = DateTime.fromFormat(application.applied, 'yyyy-MM-dd HH:mm:ss');
+                setDateApplied(appliedDate.toFormat('yyyy-MM-dd'));
+                setTimeApplied(appliedDate.toFormat('HH:mm'));
+            }
         }
     }, [application]);
 
-    // Handle form input changes
-    // Handle form input changes
-    const handleInputChange = (e) => {
+    const handleInputChange = useCallback((e) => {
         const { name, value } = e.target;
+        setFormData((prevData) => ({
+            ...prevData,
+            [name]: value
+        }));
+    }, []);
 
-        // Check if the name is related to date fields
-        if (name === 'dateadded') {
-            setDateAdded(value);  // Update dateAdded state
-            setFormData((prevData) => ({
-                ...prevData,
-                added: value,  // Update formData for dateAdded
-            }));
-        } else if (name === 'dateapplied') {
-            setDateApplied(value);  // Update dateApplied state
-            setFormData((prevData) => ({
-                ...prevData,
-                applied: value,  // Update formData for dateApplied
-            }));
-        } else if (name === 'timeadded') {
-            setTimeAdded(value);  // Update timeAdded state
-            setFormData((prevData) => ({
-                ...prevData,
-                added: value  // Update formData for added
-            }));
-        } else if (name === 'timeapplied') {
-            setTimeApplied(value);  // Update timeApplied state
-            setFormData((prevData) => ({
-                ...prevData,
-                applied: value  // Update formData for applied
-            }));
-        } else {
-            setFormData((prevData) => ({
-                ...prevData,
-                [name]: value,  // Update other fields in formData
-            }));
-        }
-    };
-
-    // Handle step change in edit mode
-    const handleStepChange = (status) => {
-        if (editMode) {
-            setFormData((prevData) => ({
-                ...prevData,
-                status: status,
-            }));
-        }
-    };
-
-    // Handle form submission
-    const handleFormSubmit = async () => {
+    const handleFormSubmit = useCallback(async () => {
         try {
-            // Define variables for added and applied dates
-            let added = null;
-            let applied = null;
-    
-            // Check if both date and time are provided for "added"
-            if (dateAdded && timeAdded) {
-                const addedDateTime = DateTime.fromFormat(`${dateAdded} ${timeAdded}`, 'yyyy-MM-dd HH:mm');
-                added = addedDateTime.toFormat('yyyy-MM-dd HH:mm:ss');
-            }
-    
-            // Check if both date and time are provided for "applied"
-            if (dateApplied && timeApplied) {
-                const appliedDateTime = DateTime.fromFormat(`${dateApplied} ${timeApplied}`, 'yyyy-MM-dd HH:mm');
-                applied = appliedDateTime.toFormat('yyyy-MM-dd HH:mm:ss');
-            }
-    
-            // Prepare updated form data
-            const updatedFormData = {
-                ...formData,
-                added: added,   // Will be null if no date or time is provided
-                applied: applied,  // Will be null if no date or time is provided
-            };
-    
-            // Dispatch the update with the updated form data
+            const added = formatDateTime(dateAdded, timeAdded);
+            const applied = formatDateTime(dateApplied, timeApplied);
+            const updatedFormData = { ...formData, added, applied };
+
             await dispatch(updateApplication({ id, application: updatedFormData })).unwrap();
-            setEditMode(false); // Disable edit mode after updating
-            await dispatch(getApplicationById(id)).unwrap(); // Reload the application data
+            setEditMode(false);
             toast.success("Application updated successfully.");
         } catch (error) {
             toast.error("An error occurred. Please try again.");
         }
-    };
-    
+    }, [dateAdded, timeAdded, dateApplied, timeApplied, formData, id, dispatch]);
 
-    const handleDelete = async () => {
+    const handleDelete = useCallback(async () => {
         try {
             await dispatch(deleteApplication(id)).unwrap();
             navigate("/");
@@ -173,49 +98,45 @@ const AppDashboard = () => {
         } catch (error) {
             toast.error("An error occurred. Please try again.");
         }
-    }
+    }, [id, dispatch, navigate]);
 
-    // Step mapping based on application status
-    const statusToStepMap = {
+    const statusToStepMap = useMemo(() => ({
         Bookmarked: 0,
         Applied: 1,
         Assessment: 2,
         Interview: 3,
         Offer: 4,
-    };
+    }), []);
 
     const stepOptions = ["Bookmarked", "Applied", "Assessment", "Interview", "Offer"];
-
-    const currentStepIndex = statusToStepMap[formData.status] || 0;
+    const currentStepIndex = useMemo(() => statusToStepMap[formData.status] || 0, [formData.status, statusToStepMap]);
 
     return (
         <Container style={{ marginTop: '1em', minWidth: '70%' }}>
             <Segment basic>
-                <Header textAlign="center" as='h1'>Application Dashboard
-                    <Header.Subheader><Link to="/"><Icon name="arrow left" />Back to Applications</Link></Header.Subheader>
+                <Header textAlign="center" as='h1'>
+                    Application Dashboard
+                    <Header.Subheader>
+                        <Link to="/"><Icon name="arrow left" />Back to Applications</Link>
+                    </Header.Subheader>
                 </Header>
                 <Segment>
                     <Grid columns={3}>
                         <Grid.Row>
-                            <Grid.Column >
+                            <Grid.Column>
                                 <Button.Group fluid>
-                                    <Button color='blue' onClick={() => setEditMode(!editMode)}> {editMode ? 'Cancel' : 'Edit'} </Button>
-                                    {
-                                        editMode && (
-                                            <Button color='orange' onClick={handleFormSubmit}>Save</Button>
-                                        )
-
-                                    }
+                                    <Button color='blue' onClick={() => setEditMode(!editMode)}>
+                                        {editMode ? 'Cancel' : 'Edit'}
+                                    </Button>
+                                    {editMode && <Button color='orange' onClick={handleFormSubmit}>Save</Button>}
                                 </Button.Group>
-                            </Grid.Column >
-                            <Grid.Column >
-                                {
-                                    formData.coverletter === 1 ? (
-                                        <Button fluid color='green' onClick={() => setModalOpen(true)}>View Cover Letter</Button>
-                                    ) : (
-                                        <Button fluid color='orange' >Create Cover Letter</Button>
-                                    )
-                                }
+                            </Grid.Column>
+                            <Grid.Column>
+                                {formData.coverletter ? (
+                                    <Button fluid color='green' onClick={() => setModalOpen(true)}>View Cover Letter</Button>
+                                ) : (
+                                    <Button fluid color='orange'>Create Cover Letter</Button>
+                                )}
                             </Grid.Column>
                             <Grid.Column>
                                 <Popup
@@ -234,7 +155,7 @@ const AppDashboard = () => {
                             <Step
                                 key={status}
                                 active={currentStepIndex === index}
-                                onClick={() => handleStepChange(status)}
+                                onClick={() => editMode && setFormData(prevData => ({ ...prevData, status }))}
                                 disabled={!editMode}
                             >
                                 <Icon name={status === "Bookmarked" ? "bookmark" :
@@ -249,12 +170,11 @@ const AppDashboard = () => {
                     </Step.Group>
                 </Segment>
                 <Segment>
-                    <Form size="large">
+                    <Form size="large" loading={isLoading} onSubmit={handleFormSubmit}>
                         <Form.Group widths='equal'>
                             <Form.Input
                                 fluid
                                 label='Date Added'
-                                placeholder='Date Added'
                                 name="dateadded"
                                 value={dateAdded}
                                 onChange={handleInputChange}
@@ -263,7 +183,6 @@ const AppDashboard = () => {
                             <Form.Input
                                 fluid
                                 label='Time Added'
-                                placeholder='Time Added'
                                 name="timeadded"
                                 value={timeAdded}
                                 onChange={handleInputChange}
@@ -272,7 +191,6 @@ const AppDashboard = () => {
                             <Form.Input
                                 fluid
                                 label='Date Applied'
-                                placeholder='Date Applied'
                                 name="dateapplied"
                                 value={dateApplied}
                                 onChange={handleInputChange}
@@ -281,13 +199,13 @@ const AppDashboard = () => {
                             <Form.Input
                                 fluid
                                 label='Time Applied'
-                                placeholder='Time Applied'
                                 name="timeapplied"
                                 value={timeApplied}
                                 onChange={handleInputChange}
                                 readOnly={!editMode}
                             />
                         </Form.Group>
+                        {/* Other Form Inputs */}
                     </Form>
                 </Segment>
                 <Segment>
@@ -370,6 +288,6 @@ const AppDashboard = () => {
             </Segment>
         </Container>
     );
-}
+};
 
 export default AppDashboard;
