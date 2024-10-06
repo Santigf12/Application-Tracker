@@ -10,7 +10,11 @@ const client = new OpenAI({
 const scrapeJobPosting = async (jobUrl) => {
     try {
         // Launch a Puppeteer browser instance
-        const browser = await puppeteer.launch({ headless: true });
+        const browser = await puppeteer.launch({ 
+            headless: true,
+            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser', // Use the system-installed Chromium
+            args: ['--no-sandbox', '--disable-setuid-sandbox'] // Disable the sandbox for root execution
+        });
         const page = await browser.newPage();
         
         // Go to the job URL
