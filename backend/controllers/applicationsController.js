@@ -48,8 +48,8 @@ const getApplicationbyId = async (req, res) => {
             location, 
             url,
             length, 
-            CAST(added AS CHAR) AS added, 
-            CAST(applied AS CHAR) AS applied, 
+            CAST(added AS CHAR) AS added,
+            CAST(applied AS CHAR) AS applied,
             status, 
             posting,
             coverletter

@@ -55,6 +55,8 @@ const AppDashboard = () => {
         }
     }, [application]);
 
+    console.log(application.applied);
+
     
 
     // Set the date added and date applied using Luxon
@@ -67,7 +69,8 @@ const AppDashboard = () => {
             setDateAdded(dateAdded);
             setTimeAdded(timeAdded);
 
-        } else if (application.applied) {
+        } 
+        if (application.applied) {
 
             const dateApplied = DateTime.fromFormat(application?.applied, 'yyyy-MM-dd HH:mm:ss').toFormat('yyyy-MM-dd');
             const timeApplied = DateTime.fromFormat(application?.applied, 'yyyy-MM-dd HH:mm:ss').toFormat('HH:mm');
