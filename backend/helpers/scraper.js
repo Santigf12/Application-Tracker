@@ -75,6 +75,8 @@ const scrapeJobPosting = async (jobUrl) => {
         const length = lengthMatch ? lengthMatch[1].trim() : 'Not provided';
         const posting = postingMatch ? postingMatch[1].trim() : 'Not provided';
 
+        console.log('Scraped job posting:', { title, company, location, length, posting, url });
+
         // Return the result in the required format
         return { title, company, location, length, posting, url };
 
