@@ -1,20 +1,14 @@
-FROM node:20-alpine
+FROM node:20-slim
 WORKDIR /app
 
-# Install necessary dependencies
-RUN apk add --no-cache \
-    chromium \
-    nss \
-    freetype \
-    harfbuzz \
-    ca-certificates \
-    ttf-freefont \
-    udev \
-    bash \
-    libc6-compat
+# Install Google Chrome and dependencies
+RUN apt-get update && apt-get install -y \
+    google-chrome-stable \
+    fonts-liberation \
+    --no-install-recommends
 
-# Set environment variable for Puppeteer to use the installed version of Chromium
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+# Set the environment variable for Puppeteer to use Google Chrome
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
 
 # Copy the package files and install dependencies
 COPY ./backend/package.json ./
