@@ -1,11 +1,17 @@
 FROM node:20-slim
 WORKDIR /app
 
-# Install Google Chrome and dependencies
+# Install dependencies, download and install Google Chrome manually
 RUN apt-get update && apt-get install -y \
-    google-chrome-stable \
+    wget \
+    gnupg \
+    ca-certificates \
     fonts-liberation \
-    --no-install-recommends
+    --no-install-recommends && \
+    wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor > /usr/share/keyrings/google-linux-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/google-linux-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list && \
+    apt-get update && apt-get install -y google-chrome-stable --no-install-recommends && \
+    rm -rf /var/lib/apt/lists/*
 
 # Set the environment variable for Puppeteer to use Google Chrome
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
