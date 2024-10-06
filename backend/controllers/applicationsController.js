@@ -90,16 +90,17 @@ const createApplication = async (req, res) => {
 
 const updateApplication = async (req, res) => {
   const { id } = req.params;
-  const { title, company, location, length, url, posting, status } = req.body;
+  const { title, company, location, length, url, posting, status, applied, added } = req.body;
 
   try {
     const query = `
         UPDATE job_applications 
-        SET title = ?, company = ?, location = ?, length = ?, url = ?, posting = ?, status = ?
+        SET title = ?, company = ?, location = ?, length = ?, url = ?, posting = ?, status = ?,
+        applied = ?, added = ?
         WHERE id = ?;
     `;
 
-    await pool.promise().query(query, [title, company, location, length, url, posting, status, id]);
+    await pool.promise().query(query, [title, company, location, length, url, posting, status, applied, added, id]);
 
     return res.status(200).json({ success: true, message: "Application updated" });
   } catch (error) {

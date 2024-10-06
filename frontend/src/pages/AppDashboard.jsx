@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon';
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -13,6 +14,10 @@ const AppDashboard = () => {
     const { id } = useParams();
     const { application, isLoading, isSuccess, isError } = useSelector((state) => state.applications);
 
+    const [dateAdded, setDateAdded] = useState("");
+    const [dateApplied, setDateApplied] = useState("");
+    const [timeAdded, setTimeAdded] = useState("");
+    const [timeApplied, setTimeApplied] = useState("");
     const [editMode, setEditMode] = useState(false);
     const [modalOpen, setModalOpen] = useState(false);
     const [formData, setFormData] = useState({
@@ -50,13 +55,62 @@ const AppDashboard = () => {
         }
     }, [application]);
 
+    
+
+    // Set the date added and date applied using Luxon
+    useEffect(() => {
+        if (application.applied && application.added) {
+            // Assuming application.dateAdded and application.dateApplied are in '2024-09-24 13:51:00' format
+
+            const dateAdded = DateTime.fromFormat(application?.added, 'yyyy-MM-dd HH:mm:ss').toFormat('yyyy-MM-dd');
+            const dateApplied = DateTime.fromFormat(application?.applied, 'yyyy-MM-dd HH:mm:ss').toFormat('yyyy-MM-dd');
+
+            const timeAdded = DateTime.fromFormat(application?.added, 'yyyy-MM-dd HH:mm:ss').toFormat('HH:mm');
+            const timeApplied = DateTime.fromFormat(application?.applied, 'yyyy-MM-dd HH:mm:ss').toFormat('HH:mm');
+
+            setDateAdded(dateAdded);
+            setDateApplied(dateApplied);
+            setTimeAdded(timeAdded);
+            setTimeApplied(timeApplied);
+        }
+    }, [application]);
+
+    // Handle form input changes
     // Handle form input changes
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setFormData((prevData) => ({
-            ...prevData,
-            [name]: value,
-        }));
+
+        // Check if the name is related to date fields
+        if (name === 'dateadded') {
+            setDateAdded(value);  // Update dateAdded state
+            setFormData((prevData) => ({
+                ...prevData,
+                added: value,  // Update formData for dateAdded
+            }));
+        } else if (name === 'dateapplied') {
+            setDateApplied(value);  // Update dateApplied state
+            setFormData((prevData) => ({
+                ...prevData,
+                applied: value,  // Update formData for dateApplied
+            }));
+        } else if (name === 'timeadded') {
+            setTimeAdded(value);  // Update timeAdded state
+            setFormData((prevData) => ({
+                ...prevData,
+                added: value  // Update formData for added
+            }));
+        } else if (name === 'timeapplied') {
+            setTimeApplied(value);  // Update timeApplied state
+            setFormData((prevData) => ({
+                ...prevData,
+                applied: value  // Update formData for applied
+            }));
+        } else {
+            setFormData((prevData) => ({
+                ...prevData,
+                [name]: value,  // Update other fields in formData
+            }));
+        }
     };
 
     // Handle step change in edit mode
@@ -72,7 +126,21 @@ const AppDashboard = () => {
     // Handle form submission
     const handleFormSubmit = async () => {
         try {
-            await dispatch(updateApplication({ id, application: formData })).unwrap();
+            // modify dates fortmat to match  '2024-09-24 13:51:00' format using luxon
+            const addedDateTime = DateTime.fromFormat(`${dateAdded} ${timeAdded}`, 'yyyy-MM-dd HH:mm');
+            const appliedDateTime = DateTime.fromFormat(`${dateApplied} ${timeApplied}`, 'yyyy-MM-dd HH:mm');
+
+            // Format the DateTime objects into 'yyyy-MM-dd HH:mm:ss' for submission
+            const added = addedDateTime.toFormat('yyyy-MM-dd HH:mm:ss');
+            const applied = appliedDateTime.toFormat('yyyy-MM-dd HH:mm:ss');
+
+            const updatedFormData = {
+                ...formData,
+                added: added,
+                applied: applied,
+            };
+
+            await dispatch(updateApplication({ id, application: updatedFormData })).unwrap();
             setEditMode(false); // Disable edit mode after updating
             await dispatch(getApplicationById(id)).unwrap(); // Reload the application data
             toast.success("Application updated successfully.");
@@ -155,8 +223,8 @@ const AppDashboard = () => {
                             >
                                 <Icon name={status === "Bookmarked" ? "bookmark" :
                                     status === "Applied" ? "paper plane" :
-                                    status === "Assessment" ? "clipboard check" :
-                                    status === "Interview" ? "user" : "trophy"} />
+                                        status === "Assessment" ? "clipboard check" :
+                                            status === "Interview" ? "user" : "trophy"} />
                                 <Step.Content>
                                     <Step.Title>{status}</Step.Title>
                                 </Step.Content>
@@ -165,7 +233,48 @@ const AppDashboard = () => {
                     </Step.Group>
                 </Segment>
                 <Segment>
-                    <Header as='h3'>Application Details</Header>
+                    <Form size="large">
+                        <Form.Group widths='equal'>
+                            <Form.Input
+                                fluid
+                                label='Date Added'
+                                placeholder='Date Added'
+                                name="dateadded"
+                                value={dateAdded}
+                                onChange={handleInputChange}
+                                readOnly={!editMode}
+                            />
+                            <Form.Input
+                                fluid
+                                label='Time Added'
+                                placeholder='Time Added'
+                                name="timeadded"
+                                value={timeAdded}
+                                onChange={handleInputChange}
+                                readOnly={!editMode}
+                            />
+                            <Form.Input
+                                fluid
+                                label='Date Applied'
+                                placeholder='Date Applied'
+                                name="dateapplied"
+                                value={dateApplied}
+                                onChange={handleInputChange}
+                                readOnly={!editMode}
+                            />
+                            <Form.Input
+                                fluid
+                                label='Time Applied'
+                                placeholder='Time Applied'
+                                name="timeapplied"
+                                value={timeApplied}
+                                onChange={handleInputChange}
+                                readOnly={!editMode}
+                            />
+                        </Form.Group>
+                    </Form>
+                </Segment>
+                <Segment>
                     <Form size="large" loading={isLoading} onSubmit={handleFormSubmit}>
                         <Form.Group widths='equal'>
                             <Form.Input
@@ -237,11 +346,11 @@ const AppDashboard = () => {
                     </Form>
                 </Segment>
                 <CoverModal
-                open={modalOpen}
-                onClose={() => setModalOpen(false)}
-                company={formData.company}
-                posting={formData.posting}
-                / >
+                    open={modalOpen}
+                    onClose={() => setModalOpen(false)}
+                    company={formData.company}
+                    posting={formData.posting}
+                />
             </Segment>
         </Container>
     );
