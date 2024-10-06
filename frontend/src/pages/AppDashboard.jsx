@@ -151,7 +151,7 @@ const AppDashboard = () => {
                                 {formData.coverletter ? (
                                     <Button fluid color='green' onClick={() => setModalOpen(true)}>View Cover Letter</Button>
                                 ) : (
-                                    <Button fluid color='orange'>Create Cover Letter</Button>
+                                    <Button fluid color='orange' onClick={() => setModalOpen(true)}>Add Cover Letter</Button>
                                 )}
                             </Grid.Column>
                             <Grid.Column>
