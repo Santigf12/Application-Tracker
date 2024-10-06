@@ -1,15 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Container, Form, Header, Segment } from "semantic-ui-react";
 import { createApplication } from "../features/applications/applicationsSlice";
+import { getJobPostingContent } from "../features/tools/toolsSlice";
 
 const CreateApplication = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
     const {isLoading } = useSelector((state) => state.applications);
+    const { jobPostingContent, isLoading: isLoadingJobPosting, isError: isErrorJobPosting } = useSelector((state) => state.tools);
     const [application, setApplication] = useState({
         title: "",
         company: "",
@@ -18,6 +20,19 @@ const CreateApplication = () => {
         posting: "",
         url: ""
     });
+    const [autoFillUrl, setAutoFillUrl] = useState("");
+
+    useEffect(() => {
+        if (jobPostingContent) {
+            setApplication({
+                title: jobPostingContent.title,
+                company: jobPostingContent.company,
+                location: jobPostingContent.location,
+                length: jobPostingContent.length,
+                url: autoFillUrl
+            });
+        }
+    }, [jobPostingContent, autoFillUrl]);
     
     const onSubmit = async (e) => {
 
@@ -30,7 +45,28 @@ const CreateApplication = () => {
         } catch (error) {
             console.error(error);
             toast.error("Failed to create application");
+        } finally {
+            setApplication({
+                title: "",
+                company: "",
+                location: "",
+                length: "",
+                posting: "",
+                url: ""
+            });
         }
+    }
+
+    const autoFill = async () => {
+
+        try {
+            await dispatch(getJobPostingContent(autoFillUrl)).unwrap();
+            console.log(jobPostingContent);
+            toast.success("Job posting auto-filled successfully!");
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to auto-fill job posting");
+        } 
     }
 
     return (
@@ -39,9 +75,14 @@ const CreateApplication = () => {
                 <Header textAlign="center" as='h1'>Add Application</Header>
                 <Segment>
                     <Header as='h3'>Auto Fill with URL</Header>
-                    <Form size="large">
+                    <Form size="large" onSubmit={autoFill} loading={isLoadingJobPosting}>
                         <Form.Group widths='2'>
-                            <Form.Input fluid  placeholder='Posting URL' required />
+                            <Form.Input fluid  
+                                placeholder='Posting URL' 
+                                required 
+                                value={autoFillUrl}
+                                onChange={(e) => setAutoFillUrl(e.target.value)}
+                                />
                             <Form.Button fluid floated="right" size="large" color='blue'>Auto Fill</Form.Button>
                         </Form.Group>
                     </Form>

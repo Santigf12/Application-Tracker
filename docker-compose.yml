@@ -13,7 +13,7 @@ services:
   frontend:
     image: ghcr.io/santigf12/application-tracker-frontend:latest
     ports:
-      - "5857:3000"
+      - "5857:80"
 
     networks:
       - default

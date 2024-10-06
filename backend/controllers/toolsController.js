@@ -1,5 +1,6 @@
 const OpenAI = require('openai');
 require('dotenv').config();
+const scrapeJobPosting = require('../helpers/scraper');
 
 
 const client = new OpenAI({
@@ -80,4 +81,21 @@ const generateCoverLetterContent = async (req, res) => {
     }
 }
 
-module.exports = { generateCoverLetterContent };
+const scrapePosting = async (req, res) => {
+    try {
+        const { url } = req.body;
+
+        if (!url) {
+            return res.status(400).json({ message: 'URL is required' });
+        }
+
+        const response = await scrapeJobPosting(url);
+
+        return res.status(200).json(response);
+    } catch (error) {
+        console.error('Error scraping job posting:', error);
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
+}
+
+module.exports = { generateCoverLetterContent, scrapePosting };

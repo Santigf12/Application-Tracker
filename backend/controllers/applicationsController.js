@@ -71,15 +71,15 @@ const getApplicationbyId = async (req, res) => {
 };
 
 const createApplication = async (req, res) => {
-  const { title, company, location, length, posting } = req.body;
+  const { title, company, location, length, url, posting } = req.body;
 
   try {
     const query = `
-        INSERT INTO job_applications (title, company, location, length, posting) 
-        VALUES (?, ?, ?, ?, ?);
+        INSERT INTO job_applications (title, company, location, length, url, posting) 
+        VALUES (?, ?, ?, ?, ?, ?);
     `;
 
-    await pool.promise().query(query, [title, company, location, length, posting]);
+    await pool.promise().query(query, [title, company, location, length, url, posting]);
 
     return res.status(201).json({ success: true, message: "Application created" });
   } catch (error) {
@@ -90,16 +90,16 @@ const createApplication = async (req, res) => {
 
 const updateApplication = async (req, res) => {
   const { id } = req.params;
-  const { title, company, location, length, posting, status } = req.body;
+  const { title, company, location, length, url, posting, status } = req.body;
 
   try {
     const query = `
         UPDATE job_applications 
-        SET title = ?, company = ?, location = ?, length = ?, posting = ?, status = ?
+        SET title = ?, company = ?, location = ?, length = ?, url = ?, posting = ?, status = ?
         WHERE id = ?;
     `;
 
-    await pool.promise().query(query, [title, company, location, length, posting, status, id]);
+    await pool.promise().query(query, [title, company, location, length, url, posting, status, id]);
 
     return res.status(200).json({ success: true, message: "Application updated" });
   } catch (error) {

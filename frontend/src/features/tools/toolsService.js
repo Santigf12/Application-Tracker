@@ -19,8 +19,20 @@ const getCoverLetterContent = async (company, jobPosting) => {
   }
 };
 
+// GET job posting content from scraping
+const getJobPostingContent = async (url) => {
+  try {
+    const response = await axios.post(`${API_URL}/scrape-posting`, { url });
+    return response.data;
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: "Internal Server Error" };
+  }
+};
+
 const toolsService = {
   getCoverLetterContent,
+  getJobPostingContent,
 };
 
 export default toolsService;
