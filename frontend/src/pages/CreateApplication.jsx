@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { Container, Form, Header, Segment } from "semantic-ui-react";
+import { Container, Form, Header, Icon, Segment } from "semantic-ui-react";
 import { createApplication } from "../features/applications/applicationsSlice";
 import { getJobPostingContent } from "../features/tools/toolsSlice";
 
@@ -72,7 +72,11 @@ const CreateApplication = () => {
     return (
         <Container style={{ marginTop: '7em', minWidth: '70%' }}>
             <Segment basic>
-                <Header textAlign="center" as='h1'>Add Application</Header>
+                <Header textAlign="center" as='h1'>Add Application
+                    <Header.Subheader>
+                        <Link to="/"><Icon name="arrow left" />Back to Applications</Link>
+                    </Header.Subheader>
+                </Header>
                 <Segment>
                     <Header as='h3'>Auto Fill with URL</Header>
                     <Form size="large" onSubmit={autoFill} loading={isLoadingJobPosting}>
@@ -141,6 +145,7 @@ const CreateApplication = () => {
                                 required 
                                 value={application.posting}
                                 onChange={(e) => setApplication({ ...application, posting: e.target.value })}
+                                style={{ minHeight: 250, width: '100%' }}
                             />
                         </Form.Group>
                         <Form.Button size="large" fluid color='blue'>Submit</Form.Button>

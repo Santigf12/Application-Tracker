@@ -2,18 +2,34 @@ import { DateTime } from "luxon";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { Button, Container, Dropdown, Grid, Header, Search, Segment, Table } from "semantic-ui-react";
+import { Button, Container, Dropdown, Grid, Header, Pagination, Search, Segment, Table } from "semantic-ui-react";
 import { getAllApplications } from "../features/applications/applicationsSlice";
 
 const Home = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
+
+    //Applications array from Redux store
     const { applications, isLoading } = useSelector((state) => state.applications);
 
+    // State for sorting
     const [sortedColumn, setSortedColumn] = useState('added');
     const [sortDirection, setSortDirection] = useState('descending');
     const [sortedApplications, setSortedApplications] = useState([]);
+    
+    // State for pagination
+    const [activePage, setActivePage] = useState(1);
+    const itemsPerPage = 12;
+    const totalPages = Math.ceil(sortedApplications.length / itemsPerPage);
 
+    // State for filtering by status
+    const [filterValue, setFilterValue] = useState('');
+
+    // State for search term and results
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchResults, setSearchResults] = useState([]);
+    
     useEffect(() => {
         dispatch(getAllApplications());
     }, [dispatch]);
@@ -52,8 +68,47 @@ const Home = () => {
         return applicationDate < threeWeeksAgo;
     };
 
+    const handlePageChange = (e, { activePage }) => {
+        setActivePage(activePage);
+    };
+
+    const startIndex = (activePage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    
+    const applicationsToDisplay = sortedApplications.filter((application) => {
+        if (filterValue === '') {
+            return true;
+        }
+        return application.status === filterValue;
+    }).slice(startIndex, endIndex);
+
+    const handleSearchChange = (e, { value }) => {
+        setSearchTerm(value);
+        setIsSearching(true);
+        
+        if (value.length > 0) {
+            const filteredResults = applications
+                .filter(app => app.company.toLowerCase().includes(value.toLowerCase()))
+                .map(app => ({
+                    title: app.title,
+                    description: app.company,
+                    key: app.id,
+                    id: app.id
+                }));
+            setSearchResults(filteredResults);
+        } else {
+            setSearchResults([]);
+        }
+        setIsSearching(false);
+    };
+
+    const handleResultSelect = (e, { result }) => {
+        navigate(`/application/${result.id}`);
+    };
+
+    
     return (
-        <Container style={{ marginTop: '7em', minWidth: '70%' }}>
+        <Container style={{ marginTop: '7em', minWidth: '70%'}}>
             <Segment basic loading={isLoading}>
                 <Header textAlign="center" as='h1'>Job Application Tracker</Header>
                 
@@ -61,15 +116,30 @@ const Home = () => {
                     <Grid columns={3}>
                         <Grid.Row>
                             <Grid.Column >
-                                <Search fluid placeholder="Search Jobs"/>
+                                <Search
+                                    fluid
+                                    placeholder="Search Jobs"
+                                    onSearchChange={handleSearchChange}
+                                    value={searchTerm}
+                                    results={searchResults}
+                                    onResultSelect={handleResultSelect}
+                                    loading={isSearching}
+                                    aligned='left'
+                                />
                             </Grid.Column>
                             <Grid.Column >
-                                <Dropdown placeholder='Filter By' fluid selection clearable options={[
-                                    { key: '1', text: 'All', value: 'all' },
-                                    { key: '2', text: 'Applied', value: 'applied' },
-                                    { key: '3', text: 'Interviewed', value: 'interviewed' },
-                                    { key: '4', text: 'Rejected', value: 'rejected' },
-                                    { key: '5', text: 'Offered', value: 'offered' }
+                                <Dropdown placeholder='Filter By' 
+                                    fluid 
+                                    selection 
+                                    clearable
+                                    value={filterValue}
+                                    onChange={(e, { value }) => setFilterValue(value)}
+                                    options={[
+                                    { key: '1', text: 'Applied', value: 'Applied' },
+                                    { key: '2', text: 'Assessment', value: 'Assessment' },
+                                    { key: '3', text: 'Interview', value: 'Interview' },
+                                    { key: '4', text: 'Offer', value: 'Offer' },
+                                    { key: '5', text: 'Rejected', value: 'Rejected' },
                                 ]} />
                             </Grid.Column>
                             <Grid.Column >
@@ -78,7 +148,19 @@ const Home = () => {
                         </Grid.Row>
                     </Grid>
                 </Segment>
-
+                <Segment>
+                    <Pagination
+                        boundaryRange={0}
+                        activePage={activePage}
+                        onPageChange={handlePageChange}
+                        siblingRange={1}
+                        totalPages={totalPages}
+                        ellipsisItem={null}
+                        firstItem={null}
+                        lastItem={null}
+                        fluid
+                    />
+                </Segment>
                 <Segment>
                     <Table celled selectable sortable>
                         <Table.Header>
@@ -124,7 +206,7 @@ const Home = () => {
 
                         <Table.Body>
                             {
-                                sortedApplications.map((application) => (
+                                applicationsToDisplay.map((application) => (
                                     <Table.Row key={application.id} onClick={() => navigate(`/application/${application.id}`)} warning={isOverThreeWeeks(application.applied ? application.applied : null)}>
                                         <Table.Cell>{application.title}</Table.Cell>
                                         <Table.Cell>{application.company}</Table.Cell>

@@ -124,11 +124,24 @@ const AppDashboard = () => {
         Offer: 4,
     }), []);
 
+    const handleStepClick = (status) => {
+        if (editMode) {
+            setFormData(prevData => ({ ...prevData, status }));
+    
+            if (status === "Applied") {
+                const appliedDate = DateTime.local();
+                setDateApplied(appliedDate.toFormat('yyyy-MM-dd'));
+                setTimeApplied(appliedDate.toFormat('HH:mm'));
+            }
+        }
+    };
+    
+
     const stepOptions = ["Bookmarked", "Applied", "Assessment", "Interview", "Offer"];
     const currentStepIndex = useMemo(() => statusToStepMap[formData.status] || 0, [formData.status, statusToStepMap]);
 
     return (
-        <Container style={{ marginTop: '1em', minWidth: '70%' }}>
+        <Container style={{minWidth: '70%' }}>
             <Segment basic>
                 <Header textAlign="center" as='h1'>
                     Application Dashboard
@@ -171,7 +184,7 @@ const AppDashboard = () => {
                             <Step
                                 key={status}
                                 active={currentStepIndex === index}
-                                onClick={() => editMode && setFormData(prevData => ({ ...prevData, status }))}
+                                onClick={() => handleStepClick(status)}
                                 disabled={!editMode}
                             >
                                 <Icon name={status === "Bookmarked" ? "bookmark" :
