@@ -22,7 +22,7 @@ const createCoverLetter = async (req, res) => {
         res.status(200).send(odtBuffer);
     } catch (error) {
         console.error('Error generating cover letter ODT:', error);
-        res.status(500).json({ message: 'Error generating ODT' });
+        res.status(500).json(error);
     }
 };
 

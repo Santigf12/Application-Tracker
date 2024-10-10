@@ -10,15 +10,11 @@ else {
 
 
 const fetchCoverLetterFile = async (id, email, company, content) => {
-    try {
-        const response = await axios.post(`${API_URL}/file-cover-letter`,
-            {id, email, company, content }, 
-            { responseType: 'blob' } // Important for downloading binary data like files
-        );
-        return response.data; // This will be the ODT file blob
-    } catch (error) {
-        throw new Error('Failed to fetch cover letter file');
-    }
+    const data = await axios.post(`${API_URL}/file-cover-letter`,
+        {id, email, company, content }, 
+        { responseType: 'blob' } // Important for downloading binary data like files
+    );
+    return data;// This will be the ODT file blob
 };
 
 const fileService = {

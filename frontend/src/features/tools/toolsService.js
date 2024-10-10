@@ -10,24 +10,15 @@ else {
 
 // GET cover letter content
 const getCoverLetterContent = async (company, jobPosting) => {
-  try {
-    const response = await axios.post(`${API_URL}/cover-letter`, { company, jobPosting });
-    return response.data;
-  } catch (error) {
-    console.error(error);
-    return { success: false, message: "Internal Server Error" };
-  }
+  const { data } = await axios.post(`${API_URL}/cover-letter`, { company, jobPosting });
+  return data;
 };
 
 // GET job posting content from scraping
 const getJobPostingContent = async (url) => {
-  try {
-    const response = await axios.post(`${API_URL}/scrape-posting`, { url });
-    return response.data;
-  } catch (error) {
-    console.error(error);
-    return { success: false, message: "Internal Server Error" };
-  }
+  const { data } = await axios.post(`${API_URL}/scrape-posting`, { url });
+  return data;
+  
 };
 
 const toolsService = {

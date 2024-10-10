@@ -32,7 +32,7 @@ const getAllApplications = async (req, res) => {
     return res.status(200).json(result);
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ success: false, message: "Internal Server Error" });
+    return res.status(500).json(error);
   }
 };
 
@@ -66,7 +66,7 @@ const getApplicationbyId = async (req, res) => {
     return res.status(200).json(result[0]);
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ success: false, message: "Internal Server Error" });
+    return res.status(500).json(error);
   }
 };
 
@@ -84,7 +84,7 @@ const createApplication = async (req, res) => {
     return res.status(201).json({ success: true, message: "Application created" });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ success: false, message: "Internal Server Error" });
+    return res.status(500).json(error);
   }
 };
 
@@ -105,7 +105,7 @@ const updateApplication = async (req, res) => {
     return res.status(200).json({ success: true, message: "Application updated" });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ success: false, message: "Internal Server Error" });
+    return res.status(500).json(error);
   }
 }
 
@@ -123,7 +123,7 @@ const deleteApplication = async (req, res) => {
     return res.status(200).json({ success: true, message: "Application deleted" });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ success: false, message: "Internal Server Error" });
+    return res.status(500).json(error);
   }
 }
 
@@ -147,7 +147,7 @@ const saveCoverLetter = async (req, res) => {
     return res.status(200).json({ success: true, message: "Cover letter saved" });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ success: false, message: "Internal Server Error" });
+    return res.status(500).json(error);
   }
 };
 
@@ -165,7 +165,7 @@ const getCoverLetter = async (req, res) => {
     return res.status(200).json({ success: true, content: result[0].content });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ success: false, message: "Internal Server Error" });
+    return res.status(500).json(error);
   }
 };
 

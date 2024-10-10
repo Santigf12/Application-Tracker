@@ -77,7 +77,7 @@ const generateCoverLetterContent = async (req, res) => {
         return res.status(200).json(coverLetter);
     } catch (error) {
         console.error('Error generating cover letter:', error);
-        return res.status(500).json({ message: 'Internal Server Error' });
+        return res.status(500).json(error);
     }
 }
 
@@ -94,7 +94,7 @@ const scrapePosting = async (req, res) => {
         return res.status(200).json(response);
     } catch (error) {
         console.error('Error scraping job posting:', error);
-        return res.status(500).json({ message: 'Internal Server Error' });
+        return res.status(500).json(error);
     }
 }
 

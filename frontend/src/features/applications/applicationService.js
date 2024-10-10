@@ -10,77 +10,42 @@ else {
 
 // GET all applications
 const getAllApplications = async () => {
-  try {
-    const response = await axios.get(API_URL);
-    return response.data;
-  } catch (error) {
-    console.error(error);
-    return { success: false, message: "Internal Server Error" };
-  }
+  const { data } = await axios.get(API_URL);
+  return data;
 };
 
 //Get application by ID
 const getApplicationById = async (id) => {
-  try {
-    const response = await axios.get(`${API_URL}/${id}`);
-    return response.data;
-  } catch (error) {
-    console.error(error);
-    return { success: false, message: "Internal Server Error" };
-  }
+  const { data } = await axios.get(`${API_URL}/${id}`);
+  return data;
 };
 
 //Create application
 const createApplication = async (application) => {
-  try {
-    const response = await axios.post(API_URL, application);
-    return response.data;
-  } catch (error) {
-    console.error(error);
-    return { success: false, message: "Internal Server Error" };
-  }
+  const { data } = await axios.post(API_URL, application);
+  return data;
 }
 
 //Update application
 const updateApplication = async (id, application) => {
-  try {
-    const response = await axios.put(`${API_URL}/${id}`, application);
-    return response.data;
-  } catch (error) {
-    console.error(error);
-    return { success: false, message: "Internal Server Error" };
-  }
+  const { data }  = await axios.put(`${API_URL}/${id}`, application);
+  return data;
 }
 
 //Delete application
 const deleteApplication = async (id) => {
-  try {
-    const response = await axios.delete(`${API_URL}/${id}`);
-    return response.data;
-  } catch (error) {
-    console.error(error);
-    return { success: false, message: "Internal Server Error" };
-  }
+  const { data }  = await axios.delete(`${API_URL}/${id}`);
+  return data;
 }
 
 const saveCoverLetter = async (id, content) => {
-  try {
-    const response = await axios.post(`${API_URL}/${id}`, { content });
-    return response.data;
-  } catch (error) {
-    console.error(error);
-    return { success: false, message: "Internal Server Error" };
-  }
+  const { data }  = await axios.post(`${API_URL}/${id}`, { content });
+  return data;
 };
 
 const getCoverLetter = async (id) => {
-  try {
-    const response = await axios.get(`${API_URL}/cover-letter/${id}`);
-    return response.data;
-  } catch (error) {
-    console.error(error);
-    return { success: false, message: "Internal Server Error" };
-  }
+  const { data } = await axios.get(`${API_URL}/cover-letter/${id}`);
+  return data;
 }
 
 
