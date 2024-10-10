@@ -10,11 +10,11 @@ else {
 
 
 const fetchCoverLetterFile = async (id, email, company, content) => {
-    const data = await axios.post(`${API_URL}/file-cover-letter`,
+    const response = await axios.post(`${API_URL}/file-cover-letter`,
         {id, email, company, content }, 
         { responseType: 'blob' } // Important for downloading binary data like files
     );
-    return data;// This will be the ODT file blob
+    return response.data;
 };
 
 const fileService = {
