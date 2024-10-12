@@ -264,12 +264,18 @@ const AppDashboard = () => {
                         <Form.Group widths='equal'>
                             <Form.Input
                                 fluid
+                                title='Click to open the posting URL'
                                 label='Posting URL'
                                 placeholder='Posting URL'
                                 name="url"
                                 value={formData.url}
                                 onChange={handleInputChange}
                                 readOnly={!editMode}
+                                onClick={() => {
+                                    if (!editMode && formData.url) {
+                                        window.open(formData.url, "_blank");
+                                    }
+                                }}
                             />
                         </Form.Group>
                         <Form.Group widths='equal'>
