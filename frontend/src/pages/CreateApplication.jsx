@@ -70,7 +70,7 @@ const CreateApplication = () => {
     }
 
     return (
-        <Container style={{ marginTop: '7em', minWidth: '70%' }}>
+        <Container style={{  minWidth: '70%', position : 'absolute', left : '50%', top : '50%', transform : 'translate(-50%, -50%)' }}>
             <Segment basic>
                 <Header textAlign="center" as='h1'>Add Application
                     <Header.Subheader>

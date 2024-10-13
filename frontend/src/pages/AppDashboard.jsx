@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from 'react-toastify';
-import { Button, Container, Form, Grid, Header, Icon, Popup, Segment, Step } from "semantic-ui-react";
+import { Button, Container, Form, Grid, Header, Icon, Popup, Rail, Segment, Step } from "semantic-ui-react";
 import CoverModal from '../components/CoverModal';
 import { deleteApplication, getApplicationById, getCoverLetter, updateApplication } from "../features/applications/applicationsSlice";
 
