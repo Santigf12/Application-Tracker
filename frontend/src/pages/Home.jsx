@@ -134,23 +134,13 @@ const Home = () => {
     };
     
     return (
-        <Container style={{ minWidth: '85%' }}>
+        <Container style={{ minWidth: '95%' }}>
             <Segment basic loading={isLoading}>
                 <Header textAlign="center" as='h1'>Job Application Tracker</Header>
                 <Grid columns={2}>
                     <Grid.Column width={3}>
                         <Segment>
                             <Header dividing as='h3'>Application Tools</Header>
-                            <Search
-                                placeholder="Search by Company"
-                                onSearchChange={handleSearchChange}
-                                value={searchTerm}
-                                results={searchResults}
-                                onResultSelect={handleResultSelect}
-                                loading={isSearching}
-                                aligned='left'
-                            />
-                            <Divider hidden style={{ margin: 0}} />
                             <Header as='h4'>Filter by Status</Header>
                             <Menu fluid secondary vertical pointing>
                                 <Menu.Item name='All' active={filterValue === ''} onClick={() => setFilterValue('')}>All</Menu.Item>
@@ -221,17 +211,33 @@ const Home = () => {
                             </Grid>
                         </Segment>
                         <Segment>
-                            <Pagination
-                                boundaryRange={0}
-                                activePage={activePage}
-                                onPageChange={handlePageChange}
-                                siblingRange={1}
-                                totalPages={totalPages}
-                                ellipsisItem={null}
-                                firstItem={null}
-                                lastItem={null}
-                                fluid
-                            />
+                            <Grid verticalAlign="middle" >
+                                <Grid.Column width={12}>
+                                    <Pagination
+                                        boundaryRange={0}
+                                        activePage={activePage}
+                                        onPageChange={handlePageChange}
+                                        siblingRange={1}
+                                        totalPages={totalPages}
+                                        ellipsisItem={null}
+                                        firstItem={null}
+                                        lastItem={null}
+                                        fluid
+                                    />
+                                </Grid.Column>
+                                <Grid.Column width={4}>
+                                    <Search
+                                        placeholder="Search by company"
+                                        onSearchChange={handleSearchChange}
+                                        value={searchTerm}
+                                        results={searchResults}
+                                        onResultSelect={handleResultSelect}
+                                        loading={isSearching}
+                                        aligned='right'
+                                        fluid
+                                    />
+                                </Grid.Column>
+                            </Grid>
                         </Segment>
                         <Segment>
                             <Table celled selectable sortable>
