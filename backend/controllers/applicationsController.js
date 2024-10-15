@@ -71,15 +71,15 @@ const getApplicationbyId = async (req, res) => {
 };
 
 const createApplication = async (req, res) => {
-  const { title, company, location, length, url, posting } = req.body;
+  const { title, company, location, length, url, posting, status } = req.body;
 
   try {
     const query = `
-        INSERT INTO job_applications (title, company, location, length, url, posting) 
-        VALUES (?, ?, ?, ?, ?, ?);
+        INSERT INTO job_applications (title, company, location, length, url, posting, status) 
+        VALUES (?, ?, ?, ?, ?, ?, ?);
     `;
 
-    await pool.promise().query(query, [title, company, location, length, url, posting]);
+    await pool.promise().query(query, [title, company, location, length, url, posting, status]);
 
     return res.status(201).json({ success: true, message: "Application created" });
   } catch (error) {

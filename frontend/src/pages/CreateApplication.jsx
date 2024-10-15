@@ -18,7 +18,8 @@ const CreateApplication = () => {
         location: "",
         length: "",
         posting: "",
-        url: ""
+        url: "",
+        status: "Bookmarked"
     });
     const [autoFillUrl, setAutoFillUrl] = useState("");
 
@@ -29,7 +30,8 @@ const CreateApplication = () => {
                 company: jobPostingContent.company,
                 location: jobPostingContent.location,
                 length: jobPostingContent.length,
-                url: autoFillUrl
+                url: autoFillUrl,
+                status: "Bookmarked",
             });
         }
     }, [jobPostingContent, autoFillUrl]);
