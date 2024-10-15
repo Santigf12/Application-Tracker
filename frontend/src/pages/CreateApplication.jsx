@@ -16,7 +16,7 @@ const CreateApplication = () => {
         title: "",
         company: "",
         location: "",
-        length: "",
+        length: "4 Months",
         posting: "",
         url: "",
         status: "Bookmarked"
@@ -131,11 +131,18 @@ const CreateApplication = () => {
                                 value={application.location}
                                 onChange={(e) => setApplication({ ...application, location: e.target.value })}
                             />
-                            <Form.Input 
-                                fluid 
-                                label='Length' 
-                                placeholder='Length' 
-                                required 
+                            <Form.Dropdown
+                                fluid
+                                label='Length'
+                                placeholder='Select Length'
+                                options={[
+                                    { key: '4 Months', text: '4 Months', value: '4 Months' },
+                                    { key: '8 Months', text: '8 Months', value: '8 Months' },
+                                    { key: '12 Months', text: '12 Months', value: '12 Months' },
+                                    { key: '16 Months', text: '16 Months', value: '16 Months' }
+                                ]}
+                                required
+                                selection
                                 value={application.length}
                                 onChange={(e) => setApplication({ ...application, length: e.target.value })}
                             />

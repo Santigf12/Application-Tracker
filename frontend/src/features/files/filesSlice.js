@@ -27,22 +27,22 @@ const filesSlice = createSlice({
     reducers: {
         resetFile: (state) => {
             state.file = null;
-            state.error = null;
+            state.isError = null;
         },
     },
     extraReducers: (builder) => {
         builder
             .addCase(getCoverLetterFile.pending, (state) => {
-                state.loading = true;
-                state.error = null;
+                state.isLoading = true;
+                state.isError = null;
             })
             .addCase(getCoverLetterFile.fulfilled, (state, action) => {
-                state.loading = false;
+                state.isLoading = false;
                 state.file = action.payload; // This will store the file blob
             })
             .addCase(getCoverLetterFile.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload;
+                state.isLoading = false;
+                state.isError = action.payload;
             });
     },
 });

@@ -7,7 +7,7 @@ import { saveCoverLetter } from '../features/applications/applicationsSlice';
 import { getCoverLetterFile } from '../features/files/filesSlice';
 import { getCoverLetterContent } from '../features/tools/toolsSlice';
 
-const CoverModal = ({open, onClose, posting, company}) => {
+const CoverModal = ({open, onClose, posting, company, onCoverLetterSave }) => {
     const dispatch = useDispatch();
 
     const { id } = useParams();
@@ -71,6 +71,7 @@ const CoverModal = ({open, onClose, posting, company}) => {
     const handleSaveCoverLetter = async () => {
         try {
             await dispatch(saveCoverLetter({id, content: formCover})).unwrap();
+            onCoverLetterSave(1);
             toast.success("Cover letter saved successfully!");
         } catch (error) {
             console.error("Failed to save cover letter: ", error);

@@ -154,6 +154,7 @@ const Home = () => {
                             <Header as='h4'>Filter by Status</Header>
                             <Menu fluid secondary vertical pointing>
                                 <Menu.Item name='All' active={filterValue === ''} onClick={() => setFilterValue('')}>All</Menu.Item>
+                                <Menu.Item name='Bookmarked' active={filterValue === 'Bookmarked'} onClick={() => setFilterValue('Bookmarked')}>Bookmarked</Menu.Item>
                                 <Menu.Item name='Applied' active={filterValue === 'Applied'} onClick={() => setFilterValue('Applied')}>Applied</Menu.Item>
                                 <Menu.Item name='Assessment' active={filterValue === 'Assessment'} onClick={() => setFilterValue('Assessment')}>Assessment</Menu.Item>
                                 <Menu.Item name='Interview' active={filterValue === 'Interview'} onClick={() => setFilterValue('Interview')}>Interview</Menu.Item>
