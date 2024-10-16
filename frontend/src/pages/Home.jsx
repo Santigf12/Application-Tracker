@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Button, Container, Divider, Grid, Header, Menu, Pagination, Search, Segment, Statistic, Table } from "semantic-ui-react";
+import HiddenModal from "../components/HiddenModal";
 import { getAllApplications } from "../features/applications/applicationsSlice";
 
 const Home = () => {
@@ -30,6 +31,9 @@ const Home = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isSearching, setIsSearching] = useState(false);
     const [searchResults, setSearchResults] = useState([]);
+
+    //Hidden Modal
+    const [openHidden, setOpenHidden] = useState(false);
 
     useEffect(() => {
         dispatch(getAllApplications());
@@ -96,6 +100,7 @@ const Home = () => {
 
     const filteredApplications = sortedApplications
         .filter((application) => {
+            if (application.status === 'Rejected' || application.status === 'Archived') return false;
             if (filterValue === '') return true;
             return application.status === filterValue;
         }).filter(filterByTimeFrame)
@@ -118,7 +123,7 @@ const Home = () => {
                 .filter(app => app.company.toLowerCase().includes(value.toLowerCase()))
                 .map(app => ({
                     title: app.title,
-                    description: app.company,
+                    description: `${app.company} - ${app.status}`,
                     key: app.id,
                     id: app.id
                 }));
@@ -132,6 +137,16 @@ const Home = () => {
     const handleResultSelect = (e, { result }) => {
         navigate(`/application/${result.id}`);
     };
+
+    const getApplicationStatistics = (applications, status, label) => {
+        const count = applications.filter(app => app.status === status).length;
+        return count > 0 && (
+            <Statistic key={status}>
+                <Statistic.Value>{count}</Statistic.Value>
+                <Statistic.Label>{label}</Statistic.Label>
+            </Statistic>
+        );
+    }
     
     return (
         <Container style={{ minWidth: '95%' }}>
@@ -158,39 +173,17 @@ const Home = () => {
                                 <Menu.Item name='A month ago' onClick={() => setTimeFilter('month')} active={timeFilter === 'month'}>A month ago</Menu.Item>
                             </Menu>
                             <Header dividing as='h3' style={{ marginBottom: 2 }}>Statistics</Header>
-                            <Statistic.Group widths='1'>
+                            <Statistic.Group widths="3">
                                 <Statistic>
                                     <Statistic.Value>{applications.length}</Statistic.Value>
                                     <Statistic.Label>Total Applications</Statistic.Label>
                                 </Statistic>
-                                {
-                                    applications.filter(app => app.status === 'Applied').length > 0 &&
-                                    <Statistic>
-                                        <Statistic.Value>{applications.filter(app => app.status === 'Applied').length}</Statistic.Value>
-                                        <Statistic.Label>Applied</Statistic.Label>
-                                    </Statistic>
-                                }
-                                {
-                                    applications.filter(app => app.status === 'Assessment').length > 0 &&
-                                    <Statistic>
-                                        <Statistic.Value>{applications.filter(app => app.status === 'Assessment').length}</Statistic.Value>
-                                        <Statistic.Label>Assessment</Statistic.Label>
-                                    </Statistic>
-                                }
-                                {
-                                    applications.filter(app => app.status === 'Interview').length > 0 &&
-                                    <Statistic>
-                                        <Statistic.Value>{applications.filter(app => app.status === 'Interview').length}</Statistic.Value>
-                                        <Statistic.Label>Interview</Statistic.Label>
-                                    </Statistic>
-                                }
-                                {
-                                    applications.filter(app => app.status === 'Offer').length > 0 &&
-                                    <Statistic>
-                                        <Statistic.Value>{applications.filter(app => app.status === 'Offer').length}</Statistic.Value>
-                                        <Statistic.Label>Offer</Statistic.Label>
-                                    </Statistic>
-                                }
+                                {getApplicationStatistics(applications, 'Applied', 'Applied')}
+                                {getApplicationStatistics(applications, 'Assessment', 'Assessment')}
+                                {getApplicationStatistics(applications, 'Interview', 'Interview')}
+                                {getApplicationStatistics(applications, 'Offer', 'Offer')}
+                                {getApplicationStatistics(applications, 'Rejected', 'Rejected')}
+                                {getApplicationStatistics(applications, 'Archived', 'Archived')}
                             </Statistic.Group>
                         </Segment>
                     </Grid.Column>
@@ -205,7 +198,7 @@ const Home = () => {
                                         <Button fluid color='green' size="medium">Edit Resume</Button>
                                     </Grid.Column>
                                     <Grid.Column >
-                                        <Button fluid color='orange' size="medium">See Hidden Application</Button>
+                                        <Button fluid color='orange' size="medium" onClick={() => setOpenHidden(true)}>See Hidden Application</Button>
                                     </Grid.Column>
                                 </Grid.Row>
                             </Grid>
@@ -301,6 +294,8 @@ const Home = () => {
 
                     </Grid.Column>
                 </Grid>
+
+                <HiddenModal open={openHidden} onClose={() => setOpenHidden(false)} />
             </Segment>
         </Container>
     );

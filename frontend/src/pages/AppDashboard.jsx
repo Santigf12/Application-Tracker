@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from 'react-toastify';
-import { Button, Container, Form, Grid, Header, Icon, Popup, Rail, Segment, Step } from "semantic-ui-react";
+import { Button, Container, Dropdown, Form, Grid, Header, Icon, Popup, Rail, Segment, Step } from "semantic-ui-react";
 import CoverModal from '../components/CoverModal';
 import { deleteApplication, getApplicationById, getCoverLetter, updateApplication } from "../features/applications/applicationsSlice";
 
@@ -135,13 +135,6 @@ const AppDashboard = () => {
             }
         }
     };
-
-    const handleCoverLetterValChange = (newValue) => {
-        setFormData((prevData) => ({
-            ...prevData,
-            coverletter: newValue,
-        }));
-    };
     
     const stepOptions = ["Bookmarked", "Applied", "Assessment", "Interview", "Offer"];
     const currentStepIndex = useMemo(() => statusToStepMap[formData.status] || 0, [formData.status, statusToStepMap]);
@@ -156,7 +149,7 @@ const AppDashboard = () => {
                     </Header.Subheader>
                 </Header>
                 <Segment>
-                    <Grid columns={3}>
+                    <Grid columns={4}>
                         <Grid.Row>
                             <Grid.Column>
                                 <Button.Group fluid>
@@ -179,6 +172,25 @@ const AppDashboard = () => {
                                     content={<Button content='Confirm Delete' onClick={handleDelete} />}
                                     on='click'
                                     position='top right'
+                                />
+                            </Grid.Column>
+                            <Grid.Column>
+                                {/* add dropdown to change status */}
+                                <Dropdown
+                                    fluid
+                                    selection
+                                    options={[
+                                        { key: "Bookmarked", text: "Bookmarked", value: "Bookmarked" },
+                                        { key: "Applied", text: "Applied", value: "Applied" },
+                                        { key: "Assessment", text: "Assessment", value: "Assessment" },
+                                        { key: "Interview", text: "Interview", value: "Interview" },
+                                        { key: "Offer", text: "Offer", value: "Offer" },
+                                        { key: "Rejected", text: "Rejected", value: "Rejected" },
+                                        { key: "Archived", text: "Archived", value: "Archived" },
+                                    ]}
+                                    value={formData.status}
+                                    onChange={(e, { value }) => setFormData(prevData => ({ ...prevData, status: value }))}
+                                    disabled={!editMode}
                                 />
                             </Grid.Column>
                         </Grid.Row>
