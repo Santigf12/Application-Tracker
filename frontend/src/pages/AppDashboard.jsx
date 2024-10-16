@@ -143,8 +143,6 @@ const AppDashboard = () => {
         }));
     };
     
-    
-
     const stepOptions = ["Bookmarked", "Applied", "Assessment", "Interview", "Offer"];
     const currentStepIndex = useMemo(() => statusToStepMap[formData.status] || 0, [formData.status, statusToStepMap]);
 
@@ -170,14 +168,14 @@ const AppDashboard = () => {
                             </Grid.Column>
                             <Grid.Column>
                                 {formData.coverletter ? (
-                                    <Button fluid color='green' onClick={() => setModalOpen(true)}>View Cover Letter</Button>
+                                    <Button fluid color='green' disabled={editMode} onClick={() => setModalOpen(true)}>View Cover Letter</Button>
                                 ) : (
-                                    <Button fluid color='orange' onClick={() => setModalOpen(true)}>Add Cover Letter</Button>
+                                    <Button fluid color='orange' disabled={editMode} onClick={() => setModalOpen(true)}>Add Cover Letter</Button>
                                 )}
                             </Grid.Column>
                             <Grid.Column>
                                 <Popup
-                                    trigger={<Button fluid color='red'>Delete</Button>}
+                                    trigger={<Button fluid color='red' disabled={editMode}>Delete</Button>}
                                     content={<Button content='Confirm Delete' onClick={handleDelete} />}
                                     on='click'
                                     position='top right'

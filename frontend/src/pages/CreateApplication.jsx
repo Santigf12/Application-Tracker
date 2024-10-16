@@ -144,7 +144,7 @@ const CreateApplication = () => {
                                 required
                                 selection
                                 value={application.length}
-                                onChange={(e) => setApplication({ ...application, length: e.target.value })}
+                                onChange={(e, { value }) => setApplication({ ...application, length: value })}
                             />
                         </Form.Group>
                         <Form.Group widths='equal'>
