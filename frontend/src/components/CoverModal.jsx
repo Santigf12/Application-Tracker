@@ -3,11 +3,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Button, Divider, Form, Modal, TextArea } from 'semantic-ui-react';
-import { saveCoverLetter } from '../features/applications/applicationsSlice';
+import { getApplicationById, saveCoverLetter } from '../features/applications/applicationsSlice';
 import { getCoverLetterFile } from '../features/files/filesSlice';
-import { getCoverLetterContent } from '../features/tools/toolsSlice';
+import { getCoverLetterContent, reset } from '../features/tools/toolsSlice';
 
-const CoverModal = ({open, onClose, posting, company, onCoverLetterSave }) => {
+const CoverModal = ({open, onClose, posting, company  }) => {
     const dispatch = useDispatch();
 
     const { id } = useParams();
@@ -22,6 +22,12 @@ const CoverModal = ({open, onClose, posting, company, onCoverLetterSave }) => {
     useEffect(() => {
         if (coverletter) {
             setformCover(coverletter);  // This will populate formCover from the Redux store
+        }
+    }, [coverletter]);
+
+    useEffect(() => {
+        if (coverletter !== formCover) {
+            setformCover(coverletter);
         }
     }, [coverletter]);
 
@@ -71,11 +77,13 @@ const CoverModal = ({open, onClose, posting, company, onCoverLetterSave }) => {
     const handleSaveCoverLetter = async () => {
         try {
             await dispatch(saveCoverLetter({id, content: formCover})).unwrap();
-            onCoverLetterSave(1);
             toast.success("Cover letter saved successfully!");
+            await dispatch(getApplicationById(id)).unwrap();
         } catch (error) {
             console.error("Failed to save cover letter: ", error);
             toast.error("Failed to save cover letter ");
+        } finally {
+            dispatch(reset());
         }
     }
 

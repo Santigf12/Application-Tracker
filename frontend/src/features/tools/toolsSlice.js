@@ -41,9 +41,7 @@ const coverLetterSlice = createSlice({
   name: "coverLetter",
   initialState,
   reducers: {
-    resetCoverLetterContent: (state) => {
-      state.coverLetterContent = "";
-    },
+    reset: (state) => initialState,
   },
   extraReducers: (builder) => {
     builder
@@ -86,6 +84,6 @@ const coverLetterSlice = createSlice({
   }
 });
 
-export const { resetCoverLetterContent } = coverLetterSlice.actions;
+export const { reset } = coverLetterSlice.actions;
 
 export default coverLetterSlice.reducer;

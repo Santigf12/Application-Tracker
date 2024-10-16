@@ -327,7 +327,6 @@ const AppDashboard = () => {
                     onClose={() => setModalOpen(false)}
                     company={formData.company}
                     posting={formData.posting}
-                    onCoverLetterSave={handleCoverLetterValChange}
                 />
             </Segment>
         </Container>
