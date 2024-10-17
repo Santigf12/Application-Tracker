@@ -278,7 +278,11 @@ const Home = () => {
                                 <Table.Body>
                                     {
                                         applicationsToDisplay.map((application) => (
-                                            <Table.Row key={application.id} onClick={() => navigate(`/application/${application.id}`)} warning={isOverThreeWeeks(application.applied ? application.applied : null)}>
+                                            <Table.Row key={application.id} 
+                                                onClick={() => navigate(`/application/${application.id}`)} 
+                                                warning={isOverThreeWeeks(application.applied ? application.applied : null)}
+                                                positive={application.status === 'Bookmarked'}
+                                            >
                                                 <Table.Cell>{application.title}</Table.Cell>
                                                 <Table.Cell>{application.company}</Table.Cell>
                                                 <Table.Cell>{application.location}</Table.Cell>
