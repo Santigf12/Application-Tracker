@@ -139,7 +139,16 @@ const Home = () => {
     };
 
     const getApplicationStatistics = (applications, status, label) => {
-        const count = applications.filter(app => app.status === status).length;
+        let count = 0;
+        if (status === 'Applied') {
+            // Count applications that are not rejected or archived
+            count = applications.filter(app => app.status !== 'Rejected' && app.status !== 'Archived').length;
+        } else if (status === 'Rejected') {
+            // Count applications that are rejected and archived together
+            count = applications.filter(app => app.status === 'Rejected' || app.status === 'Archived').length;
+        } else {
+            count = applications.filter(app => app.status === status).length;
+        }
         return count > 0 && (
             <Statistic key={status}>
                 <Statistic.Value>{count}</Statistic.Value>
@@ -173,17 +182,19 @@ const Home = () => {
                                 <Menu.Item name='A month ago' onClick={() => setTimeFilter('month')} active={timeFilter === 'month'}>A month ago</Menu.Item>
                             </Menu>
                             <Header dividing as='h3' style={{ marginBottom: 2 }}>Statistics</Header>
-                            <Statistic.Group widths="3">
+                            <Statistic.Group widths="3" justified>
                                 <Statistic>
                                     <Statistic.Value>{applications.length}</Statistic.Value>
                                     <Statistic.Label>Total Applications</Statistic.Label>
                                 </Statistic>
                                 {getApplicationStatistics(applications, 'Applied', 'Applied')}
+                            </Statistic.Group>
+                            <Divider hidden />
+                            <Statistic.Group widths="3">
                                 {getApplicationStatistics(applications, 'Assessment', 'Assessment')}
                                 {getApplicationStatistics(applications, 'Interview', 'Interview')}
                                 {getApplicationStatistics(applications, 'Offer', 'Offer')}
-                                {getApplicationStatistics(applications, 'Rejected', 'Rejected')}
-                                {getApplicationStatistics(applications, 'Archived', 'Archived')}
+                                {getApplicationStatistics(applications, 'Rejected', 'Rejected/Archived')}
                             </Statistic.Group>
                         </Segment>
                     </Grid.Column>
