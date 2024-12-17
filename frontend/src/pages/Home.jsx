@@ -102,11 +102,11 @@ const Home = () => {
         .filter((application) => {
             if (application.status === 'Rejected' || application.status === 'Archived') return false;
             if (filterValue === '') return true;
-            return application.status === filterValue;
+            return application.status === filterValue || application.location.includes(filterValue);
         }).filter(filterByTimeFrame)
     ;
 
-    const itemsPerPage = 14;
+    const itemsPerPage = 12;
     const totalPages = Math.ceil(filteredApplications.length / itemsPerPage);
 
     const startIndex = (activePage - 1) * itemsPerPage;
@@ -140,12 +140,17 @@ const Home = () => {
 
     const getApplicationStatistics = (applications, status, label) => {
         let count = 0;
-        if (status === 'Applied') {
+        if (status === 'All') {
+            count = applications.length;
+        } else if (status === 'Applied') {
             // Count applications that are not rejected or archived
             count = applications.filter(app => app.status !== 'Rejected' && app.status !== 'Archived').length;
         } else if (status === 'Rejected') {
-            // Count applications that are rejected and archived together
-            count = applications.filter(app => app.status === 'Rejected' || app.status === 'Archived').length;
+            // Count applications that are rejected
+            count = applications.filter(app => app.status === 'Rejected').length;
+        } else if (status === 'Archived') {
+            // Count applications that are archived
+            count = applications.filter(app => app.status === 'Archived').length;
         } else {
             count = applications.filter(app => app.status === status).length;
         }
@@ -160,7 +165,7 @@ const Home = () => {
     return (
         <Container style={{ minWidth: '95%' }}>
             <Segment basic loading={isLoading}>
-                <Header textAlign="center" as='h1'>Job Application Tracker</Header>
+                <Header textAlign="center" as='h2'>Job Application Tracker</Header>
                 <Grid columns={2}>
                     <Grid.Column width={3}>
                         <Segment>
@@ -181,21 +186,13 @@ const Home = () => {
                                 <Menu.Item name='Three weeks ago' onClick={() => setTimeFilter('threeWeeks')} active={timeFilter === 'threeWeeks'}>Three weeks ago</Menu.Item>
                                 <Menu.Item name='A month ago' onClick={() => setTimeFilter('month')} active={timeFilter === 'month'}>A month ago</Menu.Item>
                             </Menu>
-                            <Header dividing as='h3' style={{ marginBottom: 2 }}>Statistics</Header>
-                            <Statistic.Group widths="3" justified>
-                                <Statistic>
-                                    <Statistic.Value>{applications.length}</Statistic.Value>
-                                    <Statistic.Label>Total Applications</Statistic.Label>
-                                </Statistic>
-                                {getApplicationStatistics(applications, 'Applied', 'Applied')}
-                            </Statistic.Group>
-                            <Divider hidden />
-                            <Statistic.Group widths="3">
-                                {getApplicationStatistics(applications, 'Assessment', 'Assessment')}
-                                {getApplicationStatistics(applications, 'Interview', 'Interview')}
-                                {getApplicationStatistics(applications, 'Offer', 'Offer')}
-                                {getApplicationStatistics(applications, 'Rejected', 'Rejected/Archived')}
-                            </Statistic.Group>
+                            <Header as='h4'>Filter by Province</Header>
+                            <Menu fluid secondary vertical pointing>
+                                <Menu.Item name='All' active={filterValue === ''} onClick={() => setFilterValue('')}>All</Menu.Item>
+                                <Menu.Item name='Alberta' active={filterValue === 'AB'} onClick={() => setFilterValue('AB')}>Alberta</Menu.Item>
+                                <Menu.Item name='British Columbia' active={filterValue === 'BC'} onClick={() => setFilterValue('BC')}>British Columbia</Menu.Item>
+                                <Menu.Item name='Ontario' active={filterValue === 'ON'} onClick={() => setFilterValue('ON')}>Ontario</Menu.Item>
+                            </Menu>
                         </Segment>
                     </Grid.Column>
                     <Grid.Column width={13}>
@@ -215,8 +212,8 @@ const Home = () => {
                             </Grid>
                         </Segment>
                         <Segment>
-                            <Grid verticalAlign="middle" >
-                                <Grid.Column width={12}>
+                            <Grid verticalAlign="middle" dividing>
+                                <Grid.Column width={6}>
                                     <Pagination
                                         boundaryRange={0}
                                         activePage={activePage}
@@ -240,6 +237,14 @@ const Home = () => {
                                         aligned='right'
                                         fluid
                                     />
+                                </Grid.Column>
+                                <Grid.Column width={6}>
+                                    <Statistic.Group size='tiny' widths='four'>
+                                        {getApplicationStatistics(applications, 'All', 'Total')}
+                                        {getApplicationStatistics(applications, 'Applied', 'Applied')}
+                                        {getApplicationStatistics(applications, 'Rejected', 'Rejected')}
+                                        {getApplicationStatistics(applications, 'Archived', 'Archived')}
+                                    </Statistic.Group>
                                 </Grid.Column>
                             </Grid>
                         </Segment>
