@@ -1,13 +1,15 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-// Import our custom CSS
-import './scss/styles.scss';
-
-// Import all of Bootstrap's JS
 import App from './App';
+
+import "antd/dist/reset.css"; // Import Ant Design styles
+import { Provider } from 'react-redux';
+import { store } from './app/store';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <Provider store={store}>
+        <App />
+    </Provider>
   </React.StrictMode>,
 );
