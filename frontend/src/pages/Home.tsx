@@ -1,9 +1,10 @@
 import { LightFilter, ProTable } from '@ant-design/pro-components';
-import { Badge, Card, Col, DatePicker, Descriptions, Grid, Row, Space, Tag, Tooltip, Typography } from 'antd';
+import { Badge, Card, Col, DatePicker, Descriptions, Row, Space, Tag, Tooltip, Typography } from 'antd';
+import type { SortOrder } from 'antd/es/table/interface';
 import { DateTime } from 'luxon';
 import { Key, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { AppDispatch, RootState } from "../app/store";
 import { Application, getAllApplications } from "../features/applications/applicationsSlice";
 
@@ -34,6 +35,14 @@ const Home = () => {
     const [selectedTab, setSelectedTab] = useState<string>("default");
     const [searchCompany, setSearchCompany] = useState<string>("");
     const [appliedDateRange, setAppliedDateRange] = useState<[string | null, string | null]>([null, null]);
+    const [searchParams, setSearchParams] = useSearchParams();
+    
+    // Get the current page from the URL, default to 1
+    const currentPage = parseInt(searchParams.get("page") || "1", 10);
+
+    const handlePageChange = (page: number) => {
+        setSearchParams({ page: page.toString() }); // Update URL
+    }
 
     useEffect(() => {
         dispatch(getAllApplications());
@@ -45,8 +54,6 @@ const Home = () => {
         }
         return DateTime.fromFormat(date, 'yyyy-MM-dd HH:mm:ss').toLocaleString(DateTime.DATE_FULL);
     };
-
-    console.log(applications[0]);
 
     const getFilteredApplications = () => {
         let filteredApps = applications;
@@ -92,7 +99,9 @@ const Home = () => {
     };
 
 
-    const calculateDaysSinceApplied = (appliedDateStr: string): string => {
+    const calculateDaysSinceApplied = (appliedDateStr: string | null): string => {
+        if (!appliedDateStr) { return "Not Applied"; }
+
         const appliedDate = DateTime.fromFormat(appliedDateStr, 'yyyy-MM-dd HH:mm:ss');
         const currentDate = DateTime.now();
         const diff = Math.round(currentDate.diff(appliedDate, 'days').days);
@@ -142,8 +151,19 @@ const Home = () => {
             dataIndex: "applied",
             key: "applied",
             search: false,
-            sorter: (a: { applied: string; }, b: { applied: any; }) => a.applied.localeCompare(b.applied),
-            render: (_: any, record: { applied: string; }) => <Typography.Text>{formatDates(record.applied)}</Typography.Text>,
+            sorter: (a: { applied: string | null; }, b: { applied: string | null; }) => {
+                if (!a.applied && !b.applied) return 0; // Both are null
+                if (!a.applied) return 1; // Null values go last
+                if (!b.applied) return -1; // Null values go last
+        
+                return a.applied.localeCompare(b.applied);
+            },
+            render: (_: any, record: { applied: string | null; }) => (
+                <Typography.Text>
+                    {record.applied ? formatDates(record.applied) : "Not Applied"}
+                </Typography.Text>
+            ),
+            defaultSortOrder: 'descend' as SortOrder,
         },
         {
             title: "Status",
@@ -267,11 +287,14 @@ const Home = () => {
                         pagination={{
                             pageSize: 15,
                             position: ['topLeft'],
+                            current: currentPage,
+                            onChange: handlePageChange,
+                            style: { marginBottom: 15, marginTop: 0 },
                         }}
                         onRow={(record) => {
                             return {
                                 onClick: () => {
-                                    navigate(`/application/${record.id}`);
+                                    navigate(`/application/${record.id}?page=${currentPage}`);
                                 },
                             };
                         }}
@@ -286,7 +309,7 @@ const Home = () => {
                                     <DatePicker.RangePicker
                                         variant='outlined'
                                         style={{ width: '100%' }}
-                                        onChange={(dates, dateStrings) => {
+                                        onChange={(_, dateStrings) => {
                                             if (dateStrings[0] && dateStrings[1]) {
                                                 setAppliedDateRange(dateStrings as [string, string]);
                                             } else {

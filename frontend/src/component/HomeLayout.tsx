@@ -1,4 +1,4 @@
-import { ConfigProvider, Layout, theme } from "antd";
+import { ConfigProvider, Layout } from "antd";
 import enUS from "antd/es/locale/en_US";
 import { Outlet } from "react-router";
 import Navbar from "./Navbar";

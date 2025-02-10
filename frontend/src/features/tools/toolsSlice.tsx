@@ -1,9 +1,34 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import toolsService from "./toolsService";
 
+export interface JobPostingContent {
+  title: string;
+  company: string;
+  location: string;
+  length: string;
+  posting: string;
+  url: string;
+}
+
+export interface CoverLetterState {
+  coverLetterContent: string;
+  jobPostingContent: JobPostingContent;
+  isError: boolean;
+  isSuccess: boolean;
+  isLoading: boolean;
+  message: string;
+}
+
 const initialState = {
   coverLetterContent: "",
-  jobPostingContent: [],
+  jobPostingContent: {
+    title: "",
+    company: "",
+    location: "",
+    length: "",
+    posting: "",
+    url: "",
+  },
   isError: false,
   isSuccess: false,
   isLoading: false,
@@ -13,10 +38,10 @@ const initialState = {
 //Get Cover Letter Content
 export const getCoverLetterContent = createAsyncThunk(
   "coverLetter/getCoverLetterContent",
-  async ({company, jobPosting}, thunkAPI) => {
+  async ({ company, jobPosting }: { company: string; jobPosting: string }, thunkAPI) => {
     try {
       return await toolsService.getCoverLetterContent(company, jobPosting);
-    } catch (error) {
+    } catch (error: any) {
       const message = error.response.data.message || error.message;
       return thunkAPI.rejectWithValue(message);
     }
@@ -26,10 +51,10 @@ export const getCoverLetterContent = createAsyncThunk(
 //get job posting content from scraping
 export const getJobPostingContent = createAsyncThunk(
   "coverLetter/getJobPostingContent",
-  async (url, thunkAPI) => {
+  async ( url: string, thunkAPI) => {
     try {
       return await toolsService.getJobPostingContent(url);
-    } catch (error) {
+    } catch (error: any) {
       const message = error.response.data.message || error.message;
       return thunkAPI.rejectWithValue(message);
     }
@@ -41,7 +66,7 @@ const coverLetterSlice = createSlice({
   name: "coverLetter",
   initialState,
   reducers: {
-    reset: (state) => initialState,
+    reset: () => initialState,
   },
   extraReducers: (builder) => {
     builder
@@ -60,7 +85,7 @@ const coverLetterSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = false;
         state.isError = true;
-        state.message = action.payload;
+        state.message = action.payload as string;
         state.coverLetterContent = "";
       })
       //Get Job Posting Content
@@ -78,8 +103,15 @@ const coverLetterSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = false;
         state.isError = true;
-        state.message = action.payload;
-        state.jobPostingContent = [];
+        state.message = action.payload as string;
+        state.jobPostingContent = {
+          title: "",
+          company: "",
+          location: "",
+          length: "",
+          posting: "",
+          url: "",
+        }
       });
   }
 });

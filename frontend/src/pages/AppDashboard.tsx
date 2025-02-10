@@ -1,47 +1,63 @@
 
 import { ProDescriptions } from '@ant-design/pro-components';
-import { Button, Card, Col, Row, Space, Typography, message } from 'antd';
-import { useEffect, useState } from 'react';
+import { Button, Card, Col, Form, message, Popconfirm, Row, Space, Typography } from 'antd';
+import { DateTime } from 'luxon';
+import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useParams } from 'react-router';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { AppDispatch, RootState } from "../app/store";
-import { Application, getApplicationById } from '../features/applications/applicationsSlice';
+import { Application, deleteApplication, getApplicationById, updateApplication } from '../features/applications/applicationsSlice';
 
 const AppDashboard = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
 
     const dispatch = useDispatch<AppDispatch>();
 
-    const { application, isLoading } = useSelector((state: RootState) => state.applications);
+    const [form] = Form.useForm();
 
-    const [formData, setFormData] = useState<Application>({} as Application);
+    const { application, isLoading } = useSelector((state: RootState) => state.applications);
+    const page = searchParams.get("page") || "1";
 
     useEffect(() => {
         dispatch(getApplicationById(id as string));
     }, [id, dispatch]);
 
-    useEffect(() => {
-        if (application) {
-            setFormData(application);
+    const handleSave = async (_: any, record: Application & { index?: number }) => {
+        //set current date using luxon in format yyyy-mm-dd hh:mm:ss
+        const now = DateTime.now().toFormat('yyyy-MM-dd HH:mm:ss');
+
+        if (record.status === 'Applied') {
+            record.applied = now;
         }
-    }, [application]);
 
-    console.log(formData);
+        console.log('Record:', record);
 
-    const handleSave = async (key: React.Key | React.Key[], record: Application & { index?: number }, originRow: Application & { index?: number } ) => {
-        console.log("Save triggered.")
-        console.log("Key:", key);
-        console.log("Record:", record);
-        console.log("Origin Row:", originRow);
-        // You can add your save logic here.
+        try {
+            await dispatch(updateApplication({ id: id as string, application: record })).unwrap();
+            message.success('Changes saved', 1.5);
+        } catch (error) {
+            message.error('Failed to save changes', 1.5);
+        }
     };
 
     // Called by ProDescriptions when user clicks "Cancel"
     const handleCancel = async () => {
         // Revert to original application data from the store
-        setFormData(application);
+        form.setFieldsValue(application);
         message.info('Changes discarded', 1.5);
     };
+
+    const onDelete = async () => {
+        try {
+            await dispatch(deleteApplication(id as string)).unwrap();
+            message.success('Application deleted');
+            navigate('/');
+        } catch (error) {
+            message.error('Failed to delete application', 1.5);
+        }
+    }
 
     return (
         <Row gutter={[8, 0]}>
@@ -61,6 +77,7 @@ const AppDashboard = () => {
             <Col span={21}>
                 <Card bordered={true} style={{ padding: 5, height: 75, display: "flex", alignItems: "center", justifyContent: "space-evenly" }}>
                     <Typography.Title level={2} style={{ margin: 0 }}>Application Dashboard</Typography.Title>
+                    <Typography.Title level={5} style={{ margin: 0, marginLeft: 85 }}><Link to={`/?page=${page}`}>Back to Applications</Link></Typography.Title>
                 </Card>
                 <Row justify="center" align="middle">
                     <Col span={24}>
@@ -68,9 +85,14 @@ const AppDashboard = () => {
                             <ProDescriptions<Application>
                                 column={4}
                                 loading={isLoading}
-                                dataSource={formData}
-                                extra={<> <Button color={application.coverletter ? 'green' : 'orange'} variant='solid'>{application.coverletter ? "Edit" : "Add"} Cover Letter</Button> <Button color='red' variant='solid'>Delete</Button></>}
+                                dataSource={application}
+                                extra={<div style={{ position: "absolute", top: 25, left: 25 }}> <Button style={{ marginRight: 8}} color={application.coverletter ? 'green' : 'orange'} variant='solid'>{application.coverletter ? "Edit" : "Add"} Cover Letter</Button>
+                                    <Popconfirm title="Are you sure you want to delete this application?" onConfirm={onDelete} okText="Yes" cancelText="No" placement='bottomLeft'>
+                                        <Button color='red' variant='solid'>Delete</Button>
+                                    </Popconfirm>
+                                </div>}
                                 editable={{
+                                    form: form,
                                     onSave: handleSave,
                                     onCancel: handleCancel,
                                 }}
@@ -88,7 +110,7 @@ const AppDashboard = () => {
                                     }}
                                     fieldProps={{ placeholder: "Application status" }}
                                     valueType='select'
-                                
+
                                 />
                                 <ProDescriptions.Item label="Added" dataIndex="added" valueType='dateTime' />
                                 <ProDescriptions.Item label="Applied" dataIndex="applied" valueType='dateTime' fieldProps={{ placeholder: "Date applied" }} />
@@ -101,16 +123,16 @@ const AppDashboard = () => {
                                     // Use a custom render to wrap the text in a scrollable container
                                     render={(_, row) => {
                                         return (
-                                        <div
-                                            style={{
-                                                maxHeight: 'calc(100vh - 400px)',   // or a fixed height, e.g. ''
-                                                overflowY: 'auto',
-                                                textAlign: 'left',
-                                                whiteSpace: 'pre-wrap',  // preserves line breaks
-                                            }}
-                                        >
-                                            {row?.posting}
-                                        </div>
+                                            <div
+                                                style={{
+                                                    maxHeight: 'calc(100vh - 400px)',   // or a fixed height, e.g. ''
+                                                    overflowY: 'auto',
+                                                    textAlign: 'left',
+                                                    whiteSpace: 'pre-wrap',  // preserves line breaks
+                                                }}
+                                            >
+                                                {row?.posting}
+                                            </div>
                                         );
                                     }}
                                     fieldProps={{
@@ -119,8 +141,8 @@ const AppDashboard = () => {
                                         placeholder: "Enter the job posting here...",
                                         style: { width: 'calc(100vw - 500px)' }, // Adjust the width
                                     }}
-                                />                                                      
-                             </ProDescriptions>
+                                />
+                            </ProDescriptions>
 
                         </Card>
                     </Col>

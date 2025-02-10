@@ -1,27 +1,95 @@
 import { ProForm, ProFormSelect, ProFormText, ProFormTextArea } from '@ant-design/pro-components';
-import { Card, Space, message } from 'antd';
+import { Card, Space, message, notification } from 'antd';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router';
+import { AppDispatch, RootState } from "../app/store";
+import { createApplication } from "../features/applications/applicationsSlice";
+import { getJobPostingContent, reset } from "../features/tools/toolsSlice";
 
 const Create = () => {
+    const dispatch = useDispatch<AppDispatch>();
+    const navigate = useNavigate();
+
+    const [autoFillFrom] = ProForm.useForm();
+    const [applicationForm] = ProForm.useForm();
+
+    const { isLoading } = useSelector((state: RootState) => state.applications);
+    const { jobPostingContent, isLoading: isLoadingJobPosting } = useSelector((state: RootState) => state.tools);
+
+    useEffect(() => {
+        if (jobPostingContent) {
+            applicationForm.setFieldsValue({
+                title: jobPostingContent.title || '',
+                company: jobPostingContent.company || '',
+                url: jobPostingContent.url || '',
+                location: jobPostingContent.location || '',
+                length: jobPostingContent.length || '',
+                posting: jobPostingContent.posting || '',
+            });
+        }
+    }, [jobPostingContent, applicationForm]);
+
+    const onSubmit = async (values: any) => {
+
+        console.log('Form values:', values);
+        try {
+            await dispatch(createApplication(values)).unwrap();
+            notification.success({
+                message: 'Success',
+                description: 'Application created successfully!',
+                placement: 'topLeft'
+            });
+            navigate('/');
+        } catch (error) {
+            console.error(error);
+            notification.error({
+                message: 'Error',
+                description: 'Failed to create application'
+            });
+        } finally {
+            applicationForm.resetFields();
+            autoFillFrom.resetFields();
+            dispatch(reset());
+        }
+    }
+
+    const autoFill = async (url: string) => {
+        try {
+            await dispatch(getJobPostingContent(url)).unwrap();
+            notification.success({
+                message: 'Success',
+                description: 'Application created successfully!',
+                placement: 'topLeft'
+            });
+        } catch (error) {
+            console.error(error);
+            notification.error({
+                message: 'Error',
+                description: 'Failed to create application'
+            });
+        }
+    }
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 125px)', justifyContent: 'center', alignItems: 'center' }} >
-            <Card style={{ width: '60%', margin: 'auto', height: '100%',  }}>
-                <Space direction='vertical' size='large' style={{ width: '100%',  }}>
+            <Card style={{ width: '60%', margin: 'auto', height: '100%', }}>
+                <Space direction='vertical' size='large' style={{ width: '100%', }}>
 
                     <ProForm
                         layout='inline'
-                        submitter={{
-                            resetButtonProps: false,
-                        }}
+                        form={autoFillFrom}
+                        submitter={{ resetButtonProps: false }}
                         size='large'
-
+                        loading={isLoadingJobPosting}
+                        onFinish={(values) => { autoFill(values.AutoFill) }}
                     >
                         <ProForm.Group>
                             <ProFormText
                                 name="AutoFill"
                                 label="AutoFill"
                                 fieldProps={{
-                                    style: { width: 885 }
+                                    style: { width: 850 }
                                 }}
                                 placeholder="Please enter the job posting URL..."
                                 allowClear
@@ -38,6 +106,7 @@ const Create = () => {
 
                     <ProForm
                         layout='vertical'
+                        form={applicationForm}
                         submitter={{
                             resetButtonProps: false,
                         }}
@@ -48,11 +117,9 @@ const Create = () => {
                             }
                         }
                         size='large'
-                        onFinish={(values) => {
-                            console.log(values);
-                            message.success('AutoFill successful!');
-                        }}
-                        
+                        onFinish={(values) => { onSubmit(values) } }
+                        loading={isLoading}
+                        initialValues={{}}
                     >
                         <ProForm.Group>
                             <ProFormText
@@ -74,8 +141,8 @@ const Create = () => {
                         </ProForm.Group>
                         <ProForm.Group>
                             <ProFormText
-                                name="posting"
-                                label="Posting"
+                                name="url"
+                                label="Posting URL"
                                 colSize={24}
                                 placeholder="Job posting URL"
                                 allowClear
@@ -84,7 +151,7 @@ const Create = () => {
 
                         <ProForm.Group>
                             <ProFormText
-                                name="Location"
+                                name="location"
                                 label="Location"
                                 colProps={{ span: 12 }}
                                 placeholder="Location"
@@ -92,7 +159,7 @@ const Create = () => {
                                 rules={[{ required: true, message: 'Location is required' }]}
                             />
                             <ProFormSelect
-                                name="Length"
+                                name="length"
                                 label="Length"
                                 colProps={{ span: 12 }}
                                 placeholder="Length"
@@ -108,10 +175,10 @@ const Create = () => {
                         </ProForm.Group>
                         <ProForm.Group style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
                             <ProFormTextArea
-                                name="Description"
-                                label="Description"
+                                name="posting"
+                                label="Posting"
                                 colSize={24}
-                                fieldProps={{ 
+                                fieldProps={{
                                     style: { flex: 1, height: '100%', resize: 'vertical' }
                                 }}
                                 placeholder="Description"

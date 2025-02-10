@@ -2,15 +2,16 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import applicationService from "./applicationService";
 
 export interface Application {
-  id: string;
+  id?: string;
   title: string;
   company: string;
   location: string;
   posting: string;
   added: string;
   applied: string;
-  coverletter: boolean;
+  coverletter?: boolean;
   status: string;
+  length: string;
 }
 
 export interface ApplicationState {
@@ -35,6 +36,7 @@ const initialState: ApplicationState = {
     applied: "",
     coverletter: false,
     status: "",
+    length: "",
   },
   coverletter: "",
   isError: false,
@@ -202,16 +204,18 @@ export const groupSlice = createSlice({
           applied: "",
           coverletter: false,
           status: "",
+          length: "",
         };
       })
       //Update an application
       .addCase(updateApplication.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(updateApplication.fulfilled, (state) => {
+      .addCase(updateApplication.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
         state.isError = false;
+        state.application = action.payload;
       })
       .addCase(updateApplication.rejected, (state, action) => {
         state.isLoading = false;

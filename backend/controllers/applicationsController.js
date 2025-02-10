@@ -102,7 +102,8 @@ const updateApplication = async (req, res) => {
 
     await pool.promise().query(query, [title, company, location, length, url, posting, status, applied, added, id]);
 
-    return res.status(200).json({ success: true, message: "Application updated" });
+    //return status 200 with the updated application
+    return res.status(200).json({ title, company, location, length, url, posting, status, applied, added });
   } catch (error) {
     console.error(error);
     return res.status(500).json(error);
