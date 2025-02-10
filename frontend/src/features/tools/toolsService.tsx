@@ -9,13 +9,13 @@ else {
 }
 
 // GET cover letter content
-const getCoverLetterContent = async (company, jobPosting) => {
+const getCoverLetterContent = async (company: any, jobPosting: any) => {
   const { data } = await axios.post(`${API_URL}/cover-letter`, { company, jobPosting });
   return data;
 };
 
 // GET job posting content from scraping
-const getJobPostingContent = async (url) => {
+const getJobPostingContent = async (url: any) => {
   const { data } = await axios.post(`${API_URL}/scrape-posting`, { url });
   return data;
   

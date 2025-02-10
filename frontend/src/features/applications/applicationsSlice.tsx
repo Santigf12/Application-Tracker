@@ -1,9 +1,43 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import applicationService from "./applicationService";
 
-const initialState = {
+export interface Application {
+  id?: string;
+  title: string;
+  company: string;
+  location: string;
+  posting: string;
+  added: string;
+  applied: string;
+  coverletter?: boolean;
+  status: string;
+  length: string;
+}
+
+export interface ApplicationState {
+  applications: Application[];
+  application: Application;
+  coverletter: string;
+  isError: boolean;
+  isSuccess: boolean;
+  isLoading: boolean;
+  message: string;
+}
+
+const initialState: ApplicationState = {
   applications: [],
-  application: {},
+  application: {
+    id: "",
+    title: "",
+    company: "",
+    location: "",
+    posting: "",
+    added: "",
+    applied: "",
+    coverletter: false,
+    status: "",
+    length: "",
+  },
   coverletter: "",
   isError: false,
   isSuccess: false,
@@ -13,12 +47,12 @@ const initialState = {
 
 
 // GET All for the applications
-export const getAllApplications = createAsyncThunk(
+export const getAllApplications = createAsyncThunk<Application[], void, { rejectValue: string }>(
   "applications/getAll",
   async (_, thunkAPI) => {
     try {
       return await applicationService.getAllApplications();
-    } catch (error) {
+    } catch (error: any) {
       const message = error.response.data.message || error.message;
       return thunkAPI.rejectWithValue(message);
     }
@@ -26,12 +60,12 @@ export const getAllApplications = createAsyncThunk(
 );
 
 // GET application by ID
-export const getApplicationById = createAsyncThunk(
+export const getApplicationById = createAsyncThunk<Application, string, { rejectValue: string }>(
   "applications/getById",
   async (id, thunkAPI) => {
     try {
       return await applicationService.getApplicationById(id);
-    } catch (error) {
+    } catch (error: any) {
       const message = error.response.data.message || error.message;
       return thunkAPI.rejectWithValue(message);
     }
@@ -39,12 +73,12 @@ export const getApplicationById = createAsyncThunk(
 );
 
 //Post a new application
-export const createApplication = createAsyncThunk(
+export const createApplication = createAsyncThunk<Application, Application, { rejectValue: string }>(
   "applications/create",
   async (application, thunkAPI) => {
     try {
       return await applicationService.createApplication(application);
-    } catch (error) {
+    } catch (error: any) {
       const message = error.response.data.message || error.message;
       return thunkAPI.rejectWithValue(message);
     }
@@ -52,12 +86,12 @@ export const createApplication = createAsyncThunk(
 );
 
 //Put update an application
-export const updateApplication = createAsyncThunk(
+export const updateApplication = createAsyncThunk<Application, { id: string, application: Application }, { rejectValue: string }>(
   "applications/update",
   async ({ id, application }, thunkAPI) => {
     try {
       return await applicationService.updateApplication(id, application);
-    } catch (error) {
+    } catch (error: any) {
       const message = error.response.data.message || error.message;
       return thunkAPI.rejectWithValue(message);
     }
@@ -65,36 +99,36 @@ export const updateApplication = createAsyncThunk(
 );
 
 //Delete, delete an application
-export const deleteApplication = createAsyncThunk(
+export const deleteApplication = createAsyncThunk<string, string, { rejectValue: string }>(
   "applications/delete",
   async (id, thunkAPI) => {
     try {
       return await applicationService.deleteApplication(id);
-    } catch (error) {
+    } catch (error: any) {
       const message = error.response.data.message || error.message;
       return thunkAPI.rejectWithValue(message);
     }
   }
 );
 
-export const saveCoverLetter = createAsyncThunk(
+export const saveCoverLetter = createAsyncThunk<string, { id: string, content: string }, { rejectValue: string }>(
   "applications/saveCoverLetter",
   async ({ id, content }, thunkAPI) => {
     try {
       return await applicationService.saveCoverLetter(id, content);
-    } catch (error) {
+    } catch (error: any) {
       const message = error.response?.data?.message || error.message;
       return thunkAPI.rejectWithValue(message);
     }
   }
 );
 
-export const getCoverLetter = createAsyncThunk(
+export const getCoverLetter = createAsyncThunk<string, string, { rejectValue: string }>(
   "applications/getCoverLetter",
   async (id, thunkAPI) => {
     try {
       return await applicationService.getCoverLetter(id);
-    } catch (error) {
+    } catch (error: any) {
       const message = error.response?.data?.message || error.message;
       return thunkAPI.rejectWithValue(message);
     }
@@ -107,7 +141,7 @@ export const groupSlice = createSlice({
   initialState,
   // this will delete everything in the traits array
   reducers: {
-    reset: (state) => initialState,
+    reset: () => initialState,
   },
   extraReducers: (builder) => {
     builder
@@ -126,24 +160,23 @@ export const groupSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = false;
         state.isError = true;
-        state.message = action.payload;
+        state.message = action.payload ?? "";
         state.applications = [];
       })
       //Create a new application
       .addCase(createApplication.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(createApplication.fulfilled, (state, action) => {
+      .addCase(createApplication.fulfilled, (state) => {
         state.isLoading = false;
         state.isSuccess = true;
         state.isError = false;
-        state.message = action.payload.message;
       })
       .addCase(createApplication.rejected, (state, action) => {
         state.isLoading = false;
         state.isSuccess = false;
         state.isError = true;
-        state.message = action.payload;
+        state.message = action.payload ?? "";
       })
       //Get application by ID
       .addCase(getApplicationById.pending, (state) => {
@@ -160,8 +193,19 @@ export const groupSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = false;
         state.isError = true;
-        state.message = action.payload;
-        state.application = {};
+        state.message = action.payload ?? "";
+        state.application = {
+          id: "",
+          title: "",
+          company: "",
+          location: "",
+          posting: "",
+          added: "",
+          applied: "",
+          coverletter: false,
+          status: "",
+          length: "",
+        };
       })
       //Update an application
       .addCase(updateApplication.pending, (state) => {
@@ -171,45 +215,43 @@ export const groupSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = true;
         state.isError = false;
-        state.message = action.payload.message;
+        state.application = action.payload;
       })
       .addCase(updateApplication.rejected, (state, action) => {
         state.isLoading = false;
         state.isSuccess = false;
         state.isError = true;
-        state.message = action.payload
+        state.message = action.payload ?? "";
       })
       //Delete an application
       .addCase(deleteApplication.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(deleteApplication.fulfilled, (state, action) => {
+      .addCase(deleteApplication.fulfilled, (state) => {
         state.isLoading = false;
         state.isSuccess = true;
         state.isError = false;
-        state.message = action.payload.message;
       })
       .addCase(deleteApplication.rejected, (state, action) => {
         state.isLoading = false;
         state.isSuccess = false;
         state.isError = true;
-        state.message = action.payload;
+        state.message = action.payload ?? "";
       })
       //Save a cover letter
       .addCase(saveCoverLetter.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(saveCoverLetter.fulfilled, (state, action) => {
+      .addCase(saveCoverLetter.fulfilled, (state) => {
         state.isLoading = false;
         state.isSuccess = true;
         state.isError = false;
-        state.message = action.payload.message;
       })
       .addCase(saveCoverLetter.rejected, (state, action) => {
         state.isLoading = false;
         state.isSuccess = false;
         state.isError = true;
-        state.message = action.payload;
+        state.message = action.payload ?? "";
       })
       //Get a cover letter
       .addCase(getCoverLetter.pending, (state) => {
@@ -220,13 +262,13 @@ export const groupSlice = createSlice({
         state.isSuccess = true;
         state.isError = false;
         state.message = "";
-        state.coverletter = action.payload.content;
+        state.coverletter = action.payload;
       })
       .addCase(getCoverLetter.rejected, (state, action) => {
         state.isLoading = false;
         state.isSuccess = false;
         state.isError = true;
-        state.message = action.payload;
+        state.message = action.payload ?? "";
         state.coverletter = "";
       });
   },

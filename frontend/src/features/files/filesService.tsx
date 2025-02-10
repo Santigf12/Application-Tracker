@@ -9,7 +9,7 @@ else {
 }
 
 
-const fetchCoverLetterFile = async (id, email, company, content) => {
+const fetchCoverLetterFile = async (id: string, email: string, company: string, content: string): Promise<Blob> => {
     const response = await axios.post(`${API_URL}/file-cover-letter`,
         {id, email, company, content }, 
         { responseType: 'blob' } // Important for downloading binary data like files

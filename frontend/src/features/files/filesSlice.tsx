@@ -1,15 +1,20 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import fileService from './filesService';
 
-const initialState = {
+export interface FilesState {
+    file: Blob | null;
+    isLoading: boolean;
+    isError: any;
+}
+
+const initialState: FilesState = {
     file: null, // Store the file blob
     isLoading: false,
-    isError: false,
+    isError: null,
 };
 
-
 // Thunk for fetching the cover letter file
-export const getCoverLetterFile = createAsyncThunk(
+export const getCoverLetterFile = createAsyncThunk<Blob, { id: string, email: string, company: string, content: string }, { rejectValue: string }>(
     'files/getCoverLetterFile',
     async ({id, email, company, content }, thunkAPI) => {
         try {
@@ -27,7 +32,7 @@ const filesSlice = createSlice({
     reducers: {
         resetFile: (state) => {
             state.file = null;
-            state.isError = null;
+            state.isError = false;
         },
     },
     extraReducers: (builder) => {
@@ -38,13 +43,15 @@ const filesSlice = createSlice({
             })
             .addCase(getCoverLetterFile.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.file = action.payload; // This will store the file blob
+                state.file = action.payload ?? null;
             })
             .addCase(getCoverLetterFile.rejected, (state, action) => {
                 state.isLoading = false;
-                state.isError = action.payload;
+                state.isError = action.payload ?? 'Error fetching file';
             });
     },
 });
+
+export const { resetFile } = filesSlice.actions;
 
 export default filesSlice.reducer;
