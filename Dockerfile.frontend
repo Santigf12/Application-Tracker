@@ -2,12 +2,15 @@
 FROM node:20-alpine as build-step
 WORKDIR /app
 ENV PATH /app/node_modules/.bin:$PATH
-#we add frontend folder to the path, since the cloud build context is the root of the project within the cloudbuild.yaml
-COPY ./frontend/package.json ./frontend/package-lock.json ./
 
+# Copy package files and install dependencies
+COPY ./frontend/package.json ./frontend/package-lock.json ./
+RUN npm install
+
+# Copy the full frontend code
 COPY ./frontend ./
 
-RUN npm install
+# Ensure TypeScript is installed and build the TypeScript code
 RUN npm run build
 
 # Build step #2: build an nginx container
