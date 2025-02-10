@@ -36,7 +36,7 @@ const Home = () => {
     const [searchCompany, setSearchCompany] = useState<string>("");
     const [appliedDateRange, setAppliedDateRange] = useState<[string | null, string | null]>([null, null]);
     const [searchParams, setSearchParams] = useSearchParams();
-    
+
     // Get the current page from the URL, default to 1
     const currentPage = parseInt(searchParams.get("page") || "1", 10);
 
@@ -155,7 +155,7 @@ const Home = () => {
                 if (!a.applied && !b.applied) return 0; // Both are null
                 if (!a.applied) return 1; // Null values go last
                 if (!b.applied) return -1; // Null values go last
-        
+
                 return a.applied.localeCompare(b.applied);
             },
             render: (_: any, record: { applied: string | null; }) => (
@@ -327,7 +327,7 @@ const Home = () => {
                                     { label: <Tooltip title="Excludes Rejected and Archived applications.">Default{renderStatusBadge("Default", selectedTab === "default")}</Tooltip>, key: 'default' },
                                     { label: <Tooltip title="Shows only rejected applications.">Rejected{renderStatusBadge("Rejected", selectedTab === "rejected")}</Tooltip>, key: 'rejected' },
                                     { label: <Tooltip title="Shows only archived applications.">Archived{renderStatusBadge("Archived", selectedTab === "archived")}</Tooltip>, key: 'archived' },
-                                ],                                
+                                ],
                             }
                         }}
                         options={{
