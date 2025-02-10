@@ -32,8 +32,6 @@ const AppDashboard = () => {
             record.applied = now;
         }
 
-        console.log('Record:', record);
-
         try {
             await dispatch(updateApplication({ id: id as string, application: record })).unwrap();
             message.success('Changes saved', 1.5);

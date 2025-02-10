@@ -31,8 +31,6 @@ const Create = () => {
     }, [jobPostingContent, applicationForm]);
 
     const onSubmit = async (values: any) => {
-
-        console.log('Form values:', values);
         try {
             await dispatch(createApplication(values)).unwrap();
             notification.success({
@@ -179,7 +177,7 @@ const Create = () => {
                                 label="Posting"
                                 colSize={24}
                                 fieldProps={{
-                                    style: { flex: 1, height: '100%', resize: 'vertical' }
+                                    autoSize: { minRows: 9 }
                                 }}
                                 placeholder="Description"
                                 allowClear
