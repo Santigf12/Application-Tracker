@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router';
 import { AppDispatch, RootState } from "../app/store";
-import { createApplication } from "../features/applications/applicationsSlice";
+import { Application, createApplication } from "../features/applications/applicationsSlice";
 import { getJobPostingContent, reset } from "../features/tools/toolsSlice";
 
 const Create = () => {
@@ -30,7 +30,7 @@ const Create = () => {
         }
     }, [jobPostingContent, applicationForm]);
 
-    const onSubmit = async (values: any) => {
+    const onSubmit = async (values: Application) => {
         try {
             await dispatch(createApplication(values)).unwrap();
             notification.success({
@@ -115,7 +115,7 @@ const Create = () => {
                             }
                         }
                         size='large'
-                        onFinish={(values) => { onSubmit(values) } }
+                        onFinish={(values) => { onSubmit(values) }}
                         loading={isLoading}
                         initialValues={{}}
                     >

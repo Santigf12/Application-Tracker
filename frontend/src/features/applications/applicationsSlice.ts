@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import axios from "axios";
 import applicationService from "./applicationService";
 
 export interface Application {
@@ -52,9 +53,16 @@ export const getAllApplications = createAsyncThunk<Application[], void, { reject
   async (_, thunkAPI) => {
     try {
       return await applicationService.getAllApplications();
-    } catch (error: any) {
-      const message = error.response.data.message || error.message;
-      return thunkAPI.rejectWithValue(message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return thunkAPI.rejectWithValue(error.message);
+      }
+
+      if (axios.isAxiosError(error)) {
+        return thunkAPI.rejectWithValue(error.response?.data?.message ?? error.message);
+      }
+
+      return thunkAPI.rejectWithValue("An error occurred");
     }
   }
 );

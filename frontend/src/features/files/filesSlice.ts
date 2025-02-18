@@ -20,8 +20,8 @@ export const getCoverLetterFile = createAsyncThunk<Blob, { id: string, email: st
         try {
             const fileBlob = await fileService.fetchCoverLetterFile(id, email, company, content);
             return fileBlob; // Return the blob for further processing
-        } catch (error) {
-            return thunkAPI.rejectWithValue('Error fetching file');
+        } catch (error : any) {
+            return thunkAPI.rejectWithValue(error.response.data.message || error.message);
         }
     }
 );

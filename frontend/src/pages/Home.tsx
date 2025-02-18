@@ -195,7 +195,7 @@ const Home = () => {
 
     const renderStatusBadge = (status: string, active: boolean) => {
 
-        var num = 0
+        let num = 0
         if (status === "Default") {
             num = applications.filter((application) => application.status !== "Archived" && application.status !== "Rejected").length;
         } else {
