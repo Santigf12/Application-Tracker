@@ -254,6 +254,7 @@ export const groupSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = true;
         state.isError = false;
+        state.application.coverletter = true;
       })
       .addCase(saveCoverLetter.rejected, (state, action) => {
         state.isLoading = false;
