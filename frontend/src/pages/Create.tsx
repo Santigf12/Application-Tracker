@@ -32,6 +32,9 @@ const Create = () => {
 
     const onSubmit = async (values: Application) => {
         try {
+            
+            //add status to the application as 'Bookmarked'
+            values.status = 'Bookmarked';
             await dispatch(createApplication(values)).unwrap();
             notification.success({
                 message: 'Success',

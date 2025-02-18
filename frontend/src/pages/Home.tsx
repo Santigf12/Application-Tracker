@@ -172,10 +172,12 @@ const Home = () => {
             search: false,
             render: (_: any, record: { status: string; }) => {
                 const colorMap: Record<string, string> = {
+                    "Bookmarked": "geekblue",
                     "Applied": "blue",
                     "Rejected": "red",
                     "Archived": "grey",
                     "Assessment": "purple",
+                    "Interview": "orange",
                     "Offer": "green",
                 };
                 return <Tag bordered={false} color={colorMap[record.status] || "default"} style={{ width: '100%', textAlign: 'center' }}>{record.status}</Tag>;

@@ -100,6 +100,7 @@ const AppDashboard = () => {
                                 <ProDescriptions.Item label="Location" dataIndex="location" />
                                 <ProDescriptions.Item label="Status" dataIndex="status"
                                     valueEnum={{
+                                        'Bookmarked': { text: 'Bookmarked', status: 'Default' },
                                         'Applied': { text: 'Applied', status: 'Processing' },
                                         'Interview': { text: 'Interview', status: 'Warning' },
                                         'Offer': { text: 'Offer', status: 'Success' },
