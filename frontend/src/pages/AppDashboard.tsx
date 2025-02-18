@@ -2,10 +2,11 @@
 import { ProDescriptions } from '@ant-design/pro-components';
 import { Button, Card, Col, Form, message, Popconfirm, Row, Space, Typography } from 'antd';
 import { DateTime } from 'luxon';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { AppDispatch, RootState } from "../app/store";
+import CoverModal from '../component/CoverModal';
 import { Application, deleteApplication, getApplicationById, updateApplication } from '../features/applications/applicationsSlice';
 
 const AppDashboard = () => {
@@ -19,6 +20,8 @@ const AppDashboard = () => {
 
     const { application, isLoading } = useSelector((state: RootState) => state.applications);
     const page = searchParams.get("page") || "1";
+
+    const [modalOpen, setModalOpen] = useState<boolean>(false);
 
     useEffect(() => {
         dispatch(getApplicationById(id as string));
@@ -84,7 +87,15 @@ const AppDashboard = () => {
                                 column={4}
                                 loading={isLoading}
                                 dataSource={application}
-                                extra={<div style={{ position: "absolute", top: 25, left: 25 }}> <Button style={{ marginRight: 8}} color={application.coverletter ? 'green' : 'orange'} variant='solid'>{application.coverletter ? "Edit" : "Add"} Cover Letter</Button>
+                                extra={
+                                    <div style={{ position: "absolute", top: 25, left: 25 }}> 
+                                    <Button 
+                                        style={{ marginRight: 8}} color={application.coverletter ? 'green' : 'orange'} 
+                                        variant='solid'
+                                        onClick={() => setModalOpen(true)}
+                                    >
+                                        {application.coverletter ? "Edit" : "Add"} Cover Letter
+                                    </Button>
                                     <Popconfirm title="Are you sure you want to delete this application?" onConfirm={onDelete} okText="Yes" cancelText="No" placement='bottomLeft'>
                                         <Button color='red' variant='solid'>Delete</Button>
                                     </Popconfirm>
@@ -147,6 +158,7 @@ const AppDashboard = () => {
                     </Col>
                 </Row>
             </Col>
+            <CoverModal open={modalOpen} onClose={() => setModalOpen(false)} posting={application.posting} company={application.company} />
         </Row>
     );
 }

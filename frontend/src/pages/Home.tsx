@@ -1,12 +1,12 @@
 import { LightFilter, ProTable } from '@ant-design/pro-components';
-import { Badge, Card, Col, DatePicker, Descriptions, Row, Space, Tag, Tooltip, Typography } from 'antd';
+import { Badge, Button, Card, Col, DatePicker, Descriptions, Radio, Row, Space, Tag, Tooltip, Typography } from 'antd';
 import type { SortOrder } from 'antd/es/table/interface';
 import { DateTime } from 'luxon';
 import { Key, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useSearchParams } from 'react-router';
 import { AppDispatch, RootState } from "../app/store";
-import { Application, getAllApplications } from "../features/applications/applicationsSlice";
+import { Application, getAllApplications, updateApplication } from "../features/applications/applicationsSlice";
 
 const provinceMap: Record<string, string> = {
     AB: "Alberta",
@@ -36,6 +36,8 @@ const Home = () => {
     const [searchCompany, setSearchCompany] = useState<string>("");
     const [appliedDateRange, setAppliedDateRange] = useState<[string | null, string | null]>([null, null]);
     const [searchParams, setSearchParams] = useSearchParams();
+    const [multiSelectValue, setMultiSelectValue] = useState<string | undefined>(undefined);
+    const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
 
     // Get the current page from the URL, default to 1
     const currentPage = parseInt(searchParams.get("page") || "1", 10);
@@ -214,6 +216,23 @@ const Home = () => {
         />;
     };
 
+    const handleMultiSelect = async (selectedRows: Application[], status: string) => {
+        if (selectedRows.length === 0) return;
+    
+        try {
+            for (const record of selectedRows) {
+                await dispatch(updateApplication({ id: record.id as string, application: { ...record, status } })).unwrap();
+            }
+            console.log(`Successfully updated ${selectedRows.length} applications to status: ${status}`);
+
+        } catch (error) {
+            console.error("Error updating applications:", error);
+        } finally {
+            dispatch(getAllApplications());
+            setSelectedRowKeys([]);
+        }
+    };
+    
     return (
         <Row gutter={[16, 0]} style={{ minHeight: "100%" }}>
             <Col style={{ display: "flex", flexDirection: "column" }} xs={0} sm={0} md={0} lg={3} xl={3}>
@@ -286,8 +305,36 @@ const Home = () => {
                         search={false}
                         rowKey="id"
                         size='small'
+                        rowSelection={{
+                            selectedRowKeys,
+                            onChange: (keys) => setSelectedRowKeys(keys),
+                            columnTitle: 'Select',    
+                        }}
+                        tableAlertRender={({ selectedRows }) => {
+                            return (
+                                <Space style={{ display: 'flex', alignContent: 'left', justifyContent: 'left' }}>
+                                    <Button loading={isLoading} type="default" size='middle' onClick={() => handleMultiSelect(selectedRows, multiSelectValue || "Applied")}>Set Status</Button>
+                                    <Radio.Group
+                                        options={[
+                                            { label: 'Applied', value: 'Applied' },
+                                            { label: 'Assessment', value: 'Assessment' },
+                                            { label: 'Interview', value: 'Interview' },
+                                            { label: 'Offer', value: 'Offer' },
+                                            { label: 'Rejected', value: 'Rejected' },
+                                            { label: 'Archived', value: 'Archived' },
+                                        ]}
+                                        optionType="button"
+                                        buttonStyle="solid"
+                                        size="middle"
+                                        defaultValue={selectedRows.length > 0 ? selectedRows[0].status : undefined}
+                                        onChange={(e) => setMultiSelectValue(e.target.value)}
+                                    />
+                                    
+                                </Space>
+                            );
+                        }}
                         pagination={{
-                            pageSize: 15,
+                            pageSize: 14,
                             position: ['topLeft'],
                             current: currentPage,
                             onChange: handlePageChange,
@@ -295,11 +342,17 @@ const Home = () => {
                         }}
                         onRow={(record) => {
                             return {
-                                onClick: () => {
-                                    navigate(`/application/${record.id}?page=${currentPage}`);
+                                onClick: (event) => {
+                                    const target = event.target as HTMLElement;
+                                    const isInsideSelectionColumn = target.closest(".ant-table-selection-column");
+                        
+                                    if (!isInsideSelectionColumn) {
+                                        navigate(`/application/${record.id}?page=${currentPage}`);
+                                    }
                                 },
                             };
                         }}
+                        
                         toolbar={{
                             search: {
                                 placeholder: 'Search Company',
