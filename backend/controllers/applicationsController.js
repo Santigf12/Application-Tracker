@@ -163,7 +163,7 @@ const getCoverLetter = async (req, res) => {
       return res.status(404).json({ success: false, message: "Cover letter not found" });
     }
 
-    return res.status(200).json({ success: true, content: result[0].content });
+    return res.status(200).json(result[0].content);
   } catch (error) {
     console.error(error);
     return res.status(500).json(error);

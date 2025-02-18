@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { AppDispatch, RootState } from "../app/store";
 import CoverModal from '../component/CoverModal';
-import { Application, deleteApplication, getApplicationById, updateApplication } from '../features/applications/applicationsSlice';
+import { Application, deleteApplication, getApplicationById, getCoverLetter, updateApplication } from '../features/applications/applicationsSlice';
 
 const AppDashboard = () => {
     const { id } = useParams();
@@ -25,6 +25,7 @@ const AppDashboard = () => {
 
     useEffect(() => {
         dispatch(getApplicationById(id as string));
+        dispatch(getCoverLetter(id as string));
     }, [id, dispatch]);
 
     const handleSave = async (_: any, record: Application & { index?: number }) => {
