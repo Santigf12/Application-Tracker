@@ -16,7 +16,7 @@ const CoverModal = ({ open, onClose, posting, company }: { open: boolean, onClos
     const [form] = Form.useForm();
 
     const { coverLetterContent, isLoading } = useSelector((state: RootState) => state.tools);
-    const { file, isLoading: isLoadingFile, isError: isErrorFile } = useSelector((state: RootState) => state.files);
+    const { isLoading: isLoadingFile } = useSelector((state: RootState) => state.files);
     const { coverletter, isLoading: isLoadingSave, isError: isErrorSave } = useSelector((state: RootState) => state.applications);
 
     useEffect(() => {

@@ -24,6 +24,9 @@ const Navbar = () => {
         <Menu.Item key="2">
             <NavLink to='/create'>Create Application</NavLink>
         </Menu.Item>
+        <Menu.Item key="3">
+            <NavLink to='/files'>Files</NavLink>
+        </Menu.Item>
     </Menu>
   );
 };

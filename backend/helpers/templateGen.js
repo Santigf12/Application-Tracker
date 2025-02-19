@@ -34,7 +34,7 @@ const escapeXml = (text) => {
  * @param {string} email - The applicant's email
  * @param {string} company - The company name
  * @param {string} content - The cover letter content
- * @returns {string} - Path to the generated ODT file
+ * @returns {Promise<Buffer>} - The generated ODT file as a buffer
  */
 const generateCoverLetterODT = async (email, company, content) => {
     try {
