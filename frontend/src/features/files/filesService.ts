@@ -28,8 +28,13 @@ const uploadResumeFile = async (id: string, file: File, onProgress: (event: { pe
         'Content-Type': 'multipart/form-data',
         },
         onUploadProgress: (progressEvent) => {
-            const percent = progressEvent.total ? Math.round((progressEvent.loaded * 100) / progressEvent.total) : 0;
-            onProgress({ percent });
+            if (progressEvent.total) {
+                const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                if (onProgress) {
+                    console.log("Uploading: ", percentCompleted);
+                    onProgress({ percent: percentCompleted });
+                }
+            }
         },
     });
 

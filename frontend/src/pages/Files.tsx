@@ -35,7 +35,7 @@ const Files = () => {
         try {
             const id = uuidv4()
 
-            await dispatch(uploadResume({ id: id as string, file: file as File, onProgress: onProgress! })).unwrap()
+            await dispatch(uploadResume({ id: id as string, file: file as File, onProgress: onProgress ?? (() => {}) })).unwrap()
 
             if (onSuccess) {
                 onSuccess('Ok');
