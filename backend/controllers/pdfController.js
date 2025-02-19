@@ -260,8 +260,12 @@ const getMergeFiles = async (req, res) => {
         const resumeFile = files.find(file => file.includes('resume') && file.endsWith('.odt'));
         const transcriptFile = files.find(file => file.includes('Transcripts') && file.endsWith('.pdf'));
 
-        if (!resumeFile || !transcriptFile) {
-            return res.status(404).json({ message: 'Files not found' });
+        if (!resumeFile) {
+            return res.status(404).json({ message: 'Resume file not found, please upload a resume' });
+        }
+
+        if (!transcriptFile) {
+            return res.status(404).json({ message: 'Transcript file not found, please upload a transcript' });
         }
 
         const { default: PDFMerger } = await import('pdf-merger-js');
@@ -291,8 +295,9 @@ const getMergeFiles = async (req, res) => {
 
             console.log("🔄 Converting Cover Letter to PDF...");
             coverLetterPdfPath = await convertFile(coverLetterOdtPath, "pdf");
-
+            
             await merger.add(coverLetterPdfPath);
+            fs.unlinkSync(coverLetterOdtPath); // Cleanup: Delete temporary ODT file
         }
 
         console.log("Adding Transcript PDF...");

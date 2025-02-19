@@ -1,6 +1,6 @@
 
 import { ProDescriptions } from '@ant-design/pro-components';
-import { Button, Card, Col, Form, message, Popconfirm, Row, Space, Typography } from 'antd';
+import { Button, Card, Col, Form, message, notification, Popconfirm, Row, Space, Typography } from 'antd';
 import { DateTime } from 'luxon';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -8,6 +8,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { AppDispatch, RootState } from "../app/store";
 import CoverModal from '../component/CoverModal';
 import { Application, deleteApplication, getApplicationById, getCoverLetter, updateApplication } from '../features/applications/applicationsSlice';
+import { getMergeFile } from '../features/files/filesSlice';
 
 const AppDashboard = () => {
     const { id } = useParams();
@@ -18,7 +19,10 @@ const AppDashboard = () => {
 
     const [form] = Form.useForm();
 
-    const { application, isLoading } = useSelector((state: RootState) => state.applications);
+    const { application, coverletter, isLoading } = useSelector((state: RootState) => state.applications);
+
+    const { isLoading: isLoadingFile } = useSelector((state: RootState) => state.files);
+
     const page = searchParams.get("page") || "1";
 
     const [modalOpen, setModalOpen] = useState<boolean>(false);
@@ -56,8 +60,29 @@ const AppDashboard = () => {
             await dispatch(deleteApplication(id as string)).unwrap();
             message.success('Application deleted');
             navigate('/');
-        } catch (error) {
+        } catch (error: any) {
             message.error('Failed to delete application', 1.5);
+            console.error("Failed to delete application: ", error);
+        }
+    }
+
+    const handleMergeDownload = async (coverletter: boolean, email?: string, company?: string, content?: string) => {
+        try {
+            const response = await dispatch(getMergeFile({ coverletter, email, company, content })).unwrap();
+            const url = window.URL.createObjectURL(new Blob([response]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `Merged.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (error: any) {
+            console.error("Failed to download merged document: ", error);
+            notification.error({
+                message: 'Error',
+                description: 'Make sure you have a resume and transcript uploaded',
+                placement: 'topLeft'
+            });
         }
     }
 
@@ -96,6 +121,13 @@ const AppDashboard = () => {
                                         onClick={() => setModalOpen(true)}
                                     >
                                         {application.coverletter ? "Edit" : "Add"} Cover Letter
+                                    </Button>
+                                    <Button 
+                                        style={{ marginRight: 8}} color='blue' variant='solid'
+                                        loading={isLoadingFile}
+                                        onClick={() => handleMergeDownload(application.coverletter ? true : false, 'santiago.fuentes@ucalgary.ca', application.company, coverletter)}
+                                    >
+                                        Download Application
                                     </Button>
                                     <Popconfirm title="Are you sure you want to delete this application?" onConfirm={onDelete} okText="Yes" cancelText="No" placement='bottomLeft'>
                                         <Button color='red' variant='solid'>Delete</Button>

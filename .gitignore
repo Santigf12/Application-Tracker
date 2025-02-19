@@ -24,5 +24,5 @@ yarn-error.log*
 
 old_followup_survey_data.csv
 backend/credentials.json
-backend/templates/resume-file-43f8d240-fc35-4d3b-9dd5-fb5dfed2593c.odt
-backend/templates/Transcripts-39b2ad32-6549-4c9e-bcbe-a496f00bace7.pdf
+backend/templates/resume-file-*.odt
+backend/templates/Transcripts-*.pdf
