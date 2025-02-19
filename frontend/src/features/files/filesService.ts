@@ -17,7 +17,7 @@ const fetchCoverLetterFile = async (id: string, email: string, company: string, 
     return response.data;
 };
 
-const uploadResumeFile = async (id: string, file: File): Promise<{ uid: string, name: string, filePath: string, status: UploadFileStatus, type: string }> => {
+const uploadResumeFile = async (id: string, file: File, onProgress: (event: { percent: number }) => void): Promise<{ uid: string, name: string, filePath: string, status: UploadFileStatus, type: string }> => {
     // Build form data
     const formData = new FormData();
     // "resume-file" should match the Multer field name in router.post('/upload-resume', ...)
@@ -26,6 +26,10 @@ const uploadResumeFile = async (id: string, file: File): Promise<{ uid: string, 
     const response = await axios.post(`${API_URL}upload-resume?id=${id}`, formData, {
         headers: {
         'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => {
+            const percent = progressEvent.total ? Math.round((progressEvent.loaded * 100) / progressEvent.total) : 0;
+            onProgress({ percent });
         },
     });
 

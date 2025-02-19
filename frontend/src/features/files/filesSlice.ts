@@ -6,6 +6,7 @@ import fileService from './filesService';
 export interface FilesState {
     coverletterfile: Blob | null;
     isLoading: boolean;
+    isLoadingMerge: boolean;
     isError: any;
     resumeFiles?: UploadFile[];
     coverLetterTemplate?: UploadFile[];
@@ -15,6 +16,7 @@ export interface FilesState {
 const initialState: FilesState = {
     coverletterfile: null, // Store the file blob
     isLoading: false,
+    isLoadingMerge: false,
     isError: null,
     resumeFiles: [],
     coverLetterTemplate: [],
@@ -35,11 +37,11 @@ export const getCoverLetterFile = createAsyncThunk<Blob, { id: string, email: st
 );
 
 
-export const uploadResume = createAsyncThunk<{ uid: string, name: string, filePath: string, status: UploadFileStatus, type: string }, { id: string; file: File }, { rejectValue: string }>(
+export const uploadResume = createAsyncThunk<{ uid: string, name: string, filePath: string, status: UploadFileStatus, type: string }, { id: string; file: File; onProgress: (event: { percent: number }) => void }, { rejectValue: string }>(
     'files/uploadResume',
-    async ({ id, file }, thunkAPI) => {
+    async ({ id, file, onProgress }, thunkAPI) => {
         try {
-            const response = await fileService.uploadResumeFile(id, file)
+            const response = await fileService.uploadResumeFile(id, file , onProgress);
             return response;
         }
         catch (error : any) {
@@ -262,14 +264,14 @@ const filesSlice = createSlice({
 
             // Get merge file
             .addCase(getMergeFile.pending, (state) => {
-                state.isLoading = true;
+                state.isLoadingMerge = true;
                 state.isError = null;
             })
             .addCase(getMergeFile.fulfilled, (state) => {
-                state.isLoading = false;
+                state.isLoadingMerge = false;
             })
             .addCase(getMergeFile.rejected, (state, action) => {
-                state.isLoading = false;
+                state.isLoadingMerge = false;
                 state.isError = action.payload ?? 'Error fetching file';
             });
 

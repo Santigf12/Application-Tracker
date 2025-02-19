@@ -15,7 +15,7 @@ import {
 const Files = () => {
     const dispatch = useDispatch<AppDispatch>();
 
-    const { resumeFiles, coverLetterTemplate, otherFiles, isLoading } = useSelector((state: RootState) => state.files);
+    const { resumeFiles, coverLetterTemplate, otherFiles, isLoading, isLoadingMerge } = useSelector((state: RootState) => state.files);
 
     useEffect(() => {
         dispatch(getResumeFiles());
@@ -30,11 +30,12 @@ const Files = () => {
     }, [dispatch]);
 
 
-    const handleUploadResume: UploadProps['customRequest'] = async ({ file, onSuccess, onError }) => {
+    const handleUploadResume: UploadProps['customRequest'] = async ({ file, onProgress, onSuccess, onError }) => {
         
         try {
             const id = uuidv4()
-            await dispatch(uploadResume({ id: id as string, file: file as File })).unwrap()
+
+            await dispatch(uploadResume({ id: id as string, file: file as File, onProgress: onProgress! })).unwrap()
 
             if (onSuccess) {
                 onSuccess('Ok');
@@ -97,7 +98,7 @@ const Files = () => {
                 <Space direction='vertical' size='large' style={{ width: '100%', }}>
                     <Typography.Title level={3}>Application Files - Resume, Cover Letter, etc.</Typography.Title>
                     <Flex gap="small" wrap>
-                        <Button type='primary' onClick={handleMergeDownload} loading={isLoading}>Download Merged Document</Button>
+                        <Button type='primary' onClick={handleMergeDownload} loading={isLoadingMerge}>Download Merged Document</Button>
                     </Flex>
                     <Typography.Title level={5}>Resume - only odt file format supported</Typography.Title>
                     <Upload

@@ -21,7 +21,7 @@ const AppDashboard = () => {
 
     const { application, coverletter, isLoading } = useSelector((state: RootState) => state.applications);
 
-    const { isLoading: isLoadingFile } = useSelector((state: RootState) => state.files);
+    const { isLoadingMerge } = useSelector((state: RootState) => state.files);
 
     const page = searchParams.get("page") || "1";
 
@@ -124,7 +124,7 @@ const AppDashboard = () => {
                                     </Button>
                                     <Button 
                                         style={{ marginRight: 8}} color='blue' variant='solid'
-                                        loading={isLoadingFile}
+                                        loading={isLoadingMerge}
                                         onClick={() => handleMergeDownload(application.coverletter ? true : false, 'santiago.fuentes@ucalgary.ca', application.company, coverletter)}
                                     >
                                         Download Application
