@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { createAction, createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { UploadFile } from 'antd/lib';
 import { UploadFileStatus } from 'antd/lib/upload/interface';
 import fileService from './filesService';
@@ -36,12 +36,16 @@ export const getCoverLetterFile = createAsyncThunk<Blob, { id: string, email: st
     }
 );
 
+export const uploadResumeProgress = createAction<{ uid: string; progress: number; }>('files/uploadResumeProgress');
 
-export const uploadResume = createAsyncThunk<{ uid: string, name: string, filePath: string, status: UploadFileStatus, type: string }, { id: string; file: File; onProgress: (event: { percent: number }) => void }, { rejectValue: string }>(
+
+export const uploadResume = createAsyncThunk<{ uid: string, name: string, filePath: string, status: UploadFileStatus, type: string }, { id: string; file: File; }, { rejectValue: string }>(
     'files/uploadResume',
-    async ({ id, file, onProgress }, thunkAPI) => {
+    async ({ id, file }, thunkAPI) => {
         try {
-            const response = await fileService.uploadResumeFile(id, file , onProgress);
+            const response = await fileService.uploadResumeFile(id, file, (progress) => {
+                thunkAPI.dispatch(uploadResumeProgress({ uid: id, progress }));
+            } );
             return response;
         }
         catch (error : any) {
@@ -163,13 +167,35 @@ const filesSlice = createSlice({
             })
             
             // Upload resume
-            .addCase(uploadResume.pending, (state) => {
+            .addCase(uploadResume.pending, (state, action) => {
                 state.isLoading = true;
                 state.isError = null;
+                state.resumeFiles?.push({
+                    uid: action.meta.arg.id,
+                    name: action.meta.arg.file.name,
+                    status: 'uploading',
+                    percent: 0,
+                    type: action.meta.arg.file.type
+                })
             })
+            .addCase(uploadResumeProgress, (state, action) => {
+                const { uid, progress } = action.payload;
+                const fileItem = state.resumeFiles?.find((file) => file.uid === uid);
+                if (fileItem) {
+                    console.log('progress in slice:', progress);
+                    fileItem.percent = progress;
+                }
+            })
+
             .addCase(uploadResume.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.resumeFiles?.push(action.payload);
+                const existingFile = state.resumeFiles?.find(
+                    (file) => file.uid === action.payload.uid
+                );
+                if (existingFile) {
+                    existingFile.status = 'done';
+                    existingFile.percent = 100;
+                }
             })
             .addCase(uploadResume.rejected, (state, action) => {
                 state.isLoading = false;

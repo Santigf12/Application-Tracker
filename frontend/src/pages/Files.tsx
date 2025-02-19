@@ -29,13 +29,15 @@ const Files = () => {
         dispatch(getOtherFiles());
     }, [dispatch]);
 
+    console.log('resumeFiles:', resumeFiles);
 
-    const handleUploadResume: UploadProps['customRequest'] = async ({ file, onProgress, onSuccess, onError }) => {
+
+    const handleUploadResume: UploadProps['customRequest'] = async ({ file, onSuccess, onError }) => {
         
         try {
             const id = uuidv4()
 
-            await dispatch(uploadResume({ id: id as string, file: file as File, onProgress: onProgress ?? (() => {}) })).unwrap()
+            await dispatch(uploadResume({ id: id as string, file: file as File })).unwrap()
 
             if (onSuccess) {
                 onSuccess('Ok');

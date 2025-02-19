@@ -51,7 +51,6 @@ const uploadResume = async (req, res) => {
       res.status(200).json({
         uid: id,
         name: file.originalname,
-        filePath: file.path,
         status: 'done',
         type: file.mimetype
       });
@@ -73,7 +72,6 @@ const uploadCoverLetterTemplate = async (req, res) => {
       res.status(200).json({
         uid: file.originalname,
         name: file.originalname,
-        filePath: file.path, 
         status: 'done',
         type: file.mimetype,
       });
@@ -100,7 +98,6 @@ const getCoverLetterTemplate = async (req, res) => {
         const responseData = coverLetterTemplate.map((filename) => ({
           uid: filename,
           name: filename,
-          filePath: path.join('templates', filename),
           status: 'done',
           type: mime.lookup(filename) || 'application/octet-stream',
         }));
@@ -132,7 +129,6 @@ const getResumeFiles = async (req, res) => {
             //add uid as id which is the numbers after resume-file-
             uid: filename.split("resume-file-")[1].split(".")[0],
             name: 'Santiago Fuentes Resume.odt',
-            filePath: path.join('templates', filename),
             status: 'done',
             type: mime.lookup(filename) || 'application/octet-stream',
         }));
@@ -204,9 +200,7 @@ const uploadOtherFiles = async (req, res) => {
         // Respond with whatever file info you want
         res.status(200).json({
             uid: id,
-            //add name as the original name of the file without extension
             name: file.originalname,
-            filePath: file.path, 
             status: 'done',
             type: file.mimetype,
         });
@@ -233,7 +227,6 @@ const getOtherFiles = async (req, res) => {
             const responseData = resumeFiles.map((filename) => ({
                 uid: filename,
                 name: filename,
-                filePath: path.join('templates', filename),
                 status: 'done',
                 type: mime.lookup(filename) || 'application/octet-stream',
             }));
