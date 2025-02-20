@@ -87,18 +87,28 @@ const AppDashboard = () => {
         }
     }
 
+    const handleButtonCopy = (link: string) => {
+        //add link to clipboard
+        navigator.clipboard.writeText(link); //note only works in secure contexts (https)
+        notification.success({
+            message: 'Link copied to clipboard',
+            placement: 'topLeft',
+            duration: 1.0
+        });
+    }
+
     return (
         <Row gutter={[8, 0]}>
             <Col span={3}>
                 <Card bordered={true} style={{ height: '100%', display: "flex", flexDirection: "column" }}>
                     <Space direction="vertical" size="small" style={{ width: '100%', flex: 1 }}>
                         <Typography.Title level={4}>Useful Links</Typography.Title>
-                        <Button block size='large' >Job Posting</Button>
-                        <Button block size='large' >LinkedIn</Button>
-                        <Button block size='large' >Github</Button>
-                        <Button block size='large' >Portfolio</Button>
-                        <Button block size='large' >School Email</Button>
-                        <Button block size='large' >Personal Email</Button>
+                        <Button block size='large' onClick={() => handleButtonCopy(application.url)}>Job Posting</Button>
+                        <Button block size='large' onClick={() => handleButtonCopy('https://www.linkedin.com/in/santiago-f-b50079219/')}>LinkedIn</Button>
+                        <Button block size='large' onClick={() => handleButtonCopy('https://github.com/Santigf12')}>GitHub</Button>
+                        <Button block size='large' onClick={() => handleButtonCopy('https://www.fuentes.it.com/')} >Personal Website</Button>
+                        <Button block size='large' onClick={() => handleButtonCopy('mailto:santiago.fuentes@ucalgary.ca')} >School Email</Button>
+                        <Button block size='large' onClick={() => handleButtonCopy('mailto:santiago@fuentes.it.com')} >Personal Email</Button>
                     </Space>
                 </Card>
             </Col>

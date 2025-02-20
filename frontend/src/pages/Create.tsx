@@ -180,7 +180,7 @@ const Create = () => {
                                 label="Posting"
                                 colSize={24}
                                 fieldProps={{
-                                    autoSize: { minRows: 9 }
+                                    autoSize: { minRows: 9, maxRows: 10}
                                 }}
                                 placeholder="Description"
                                 allowClear
