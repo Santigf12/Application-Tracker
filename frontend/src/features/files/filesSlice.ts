@@ -58,7 +58,9 @@ export const uploadCoverLetterTemplate = createAsyncThunk<{ uid: string, name: s
     'files/uploadCoverLetterTemplate',
     async ({ file }, thunkAPI) => {
         try {
-            const response = await fileService.uploadCoverLetterTemplate(file)
+            const response = await fileService.uploadCoverLetterTemplate(file, (progress) => {
+                thunkAPI.dispatch(uploadResumeProgress({ uid: 'Cover_Letter_Template.odt', progress }));
+            });
             return response;
         }
         catch (error : any) {
@@ -152,6 +154,23 @@ const filesSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
+            // Upload resume progress to track the progress of the file upload
+            .addCase(uploadResumeProgress, (state, action) => {
+                const { uid, progress } = action.payload;
+                
+                const updateProgress = (files?: UploadFile[]) => {
+                    const fileItem = files?.find((file) => file.uid === uid);
+                    if (fileItem) {
+                        console.log('progress in slice:', progress);
+                        fileItem.percent = progress;
+                    }
+                };
+
+                updateProgress(state.resumeFiles);
+                updateProgress(state.coverLetterTemplate);
+                updateProgress(state.otherFiles);
+            })
+
             // Get cover letter file
             .addCase(getCoverLetterFile.pending, (state) => {
                 state.isLoading = true;
@@ -178,15 +197,6 @@ const filesSlice = createSlice({
                     type: action.meta.arg.file.type
                 })
             })
-            .addCase(uploadResumeProgress, (state, action) => {
-                const { uid, progress } = action.payload;
-                const fileItem = state.resumeFiles?.find((file) => file.uid === uid);
-                if (fileItem) {
-                    console.log('progress in slice:', progress);
-                    fileItem.percent = progress;
-                }
-            })
-
             .addCase(uploadResume.fulfilled, (state, action) => {
                 state.isLoading = false;
                 const existingFile = state.resumeFiles?.find(
@@ -202,9 +212,16 @@ const filesSlice = createSlice({
                 state.isError = action.payload ?? 'Error uploading file';
             })
             // Upload cover letter template
-            .addCase(uploadCoverLetterTemplate.pending, (state) => {
+            .addCase(uploadCoverLetterTemplate.pending, (state, action) => {
                 state.isLoading = true;
                 state.isError = null;
+                state.coverLetterTemplate?.push({
+                    uid: 'Cover_Letter_Template.odt',
+                    name: action.meta.arg.file.name,
+                    status: 'uploading',
+                    percent: 0,
+                    type: action.meta.arg.file.type
+                })
             })
             .addCase(uploadCoverLetterTemplate.fulfilled, (state, action) => {
                 state.isLoading = false;
@@ -259,15 +276,27 @@ const filesSlice = createSlice({
             })
 
             // Upload other files
-            .addCase(uploadOtherFiles.pending, (state) => {
+            .addCase(uploadOtherFiles.pending, (state, action) => {
                 state.isLoading = true;
                 state.isError = null;
+                state.otherFiles?.push({
+                    uid: action.meta.arg.id,
+                    name: action.meta.arg.file.name,
+                    status: 'uploading',
+                    percent: 0,
+                    type: action.meta.arg.file.type
+                })
             })
             .addCase(uploadOtherFiles.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.otherFiles?.push(action.payload);
+                const existingFile = state.otherFiles?.find(
+                    (file) => file.uid === action.payload.uid
+                );
+                if (existingFile) {
+                    existingFile.status = 'done';
+                    existingFile.percent = 100;
+                }
             })
-
             .addCase(uploadOtherFiles.rejected, (state, action) => {
                 state.isLoading = false;
                 state.isError = action.payload ?? 'Error uploading file';

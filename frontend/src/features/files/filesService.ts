@@ -31,7 +31,6 @@ const uploadResumeFile = async (id: string, file: File, onProgress?: (percent: n
             if (progressEvent.total) {
                 const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
                 if (onProgress) {
-                    console.log("Uploading in resume service: ", percentCompleted);
                     onProgress(percentCompleted);
                 }
             }
@@ -41,7 +40,7 @@ const uploadResumeFile = async (id: string, file: File, onProgress?: (percent: n
     return response.data; // e.g., { message: "...", filePath: "..." }
 };
 
-const uploadCoverLetterTemplate = async (file: File): Promise<{ uid: string, name: string, filePath: string, status: UploadFileStatus, type: string }> => {
+const uploadCoverLetterTemplate = async (file: File, onProgress?: (percent: number) => void): Promise<{ uid: string, name: string, filePath: string, status: UploadFileStatus, type: string }> => {
     // Build form data
     const formData = new FormData();
     // "resume-file" should match the Multer field name in router.post('/upload-resume', ...)
@@ -50,6 +49,14 @@ const uploadCoverLetterTemplate = async (file: File): Promise<{ uid: string, nam
     const response = await axios.post(`${API_URL}upload-cover-letter-template`, formData, {
         headers: {
         'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => { 
+            if (progressEvent.total) {
+                const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                if (onProgress) {
+                    onProgress(percentCompleted);
+                }
+            }
         },
     });
 
@@ -71,7 +78,7 @@ const getCoverLetterTemplate = async (): Promise<{ uid: string, name: string, fi
     return response.data; // e.g., [{ fileName: "...", filePath: "..." }, ...]
 };
 
-const uploadOtherFiles = async (id: string, file: File): Promise<{ uid: string, name: string, filePath: string, status: UploadFileStatus, type: string }> => {
+const uploadOtherFiles = async (id: string, file: File, onProgress?: (percent: number) => void): Promise<{ uid: string, name: string, filePath: string, status: UploadFileStatus, type: string }> => {
     // Build form data
     const formData = new FormData();
 
@@ -80,6 +87,14 @@ const uploadOtherFiles = async (id: string, file: File): Promise<{ uid: string, 
     const response = await axios.post(`${API_URL}upload-other-files?id=${id}`, formData, {
         headers: {
         'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => { 
+            if (progressEvent.total) {
+                const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                if (onProgress) {
+                    onProgress(percentCompleted);
+                }
+            }
         },
     });
 

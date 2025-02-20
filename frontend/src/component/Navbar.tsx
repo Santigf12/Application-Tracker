@@ -1,30 +1,23 @@
 import { Menu } from "antd";
-import { useState } from "react";
-import { NavLink } from "react-router";
-
+import { NavLink, useLocation } from "react-router";
 
 const Navbar = () => {
-  const [current, setCurrent] = useState("1");
-
-  const handleClick = (e: { key: string }) => {
-    setCurrent(e.key);
-  };
+  const location = useLocation()
 
   return (
     <Menu
-        onClick={handleClick}
-        selectedKeys={[current]}
+        selectedKeys={[location.pathname]}
         mode="horizontal"
         theme="dark"
         style={{ flex: 1, minWidth: 0 }}
     >
-        <Menu.Item key="1">
+        <Menu.Item key="/">
             <NavLink to="/">Home</NavLink>
         </Menu.Item>
-        <Menu.Item key="2">
+        <Menu.Item key="/create">
             <NavLink to='/create'>Create Application</NavLink>
         </Menu.Item>
-        <Menu.Item key="3">
+        <Menu.Item key="/files">
             <NavLink to='/files'>Files</NavLink>
         </Menu.Item>
     </Menu>

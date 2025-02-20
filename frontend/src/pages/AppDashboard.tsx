@@ -43,8 +43,9 @@ const AppDashboard = () => {
         try {
             await dispatch(updateApplication({ id: id as string, application: record })).unwrap();
             message.success('Changes saved', 1.5);
-        } catch (error) {
+        } catch (error: any) {
             message.error('Failed to save changes', 1.5);
+            console.error("Failed to save changes: ", error);
         }
     };
 

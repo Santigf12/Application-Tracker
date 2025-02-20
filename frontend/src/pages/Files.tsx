@@ -15,7 +15,7 @@ import {
 const Files = () => {
     const dispatch = useDispatch<AppDispatch>();
 
-    const { resumeFiles, coverLetterTemplate, otherFiles, isLoading, isLoadingMerge } = useSelector((state: RootState) => state.files);
+    const { resumeFiles, coverLetterTemplate, otherFiles, isLoadingMerge } = useSelector((state: RootState) => state.files);
 
     useEffect(() => {
         dispatch(getResumeFiles());
@@ -28,9 +28,6 @@ const Files = () => {
     useEffect(() => {
         dispatch(getOtherFiles());
     }, [dispatch]);
-
-    console.log('resumeFiles:', resumeFiles);
-
 
     const handleUploadResume: UploadProps['customRequest'] = async ({ file, onSuccess, onError }) => {
         
