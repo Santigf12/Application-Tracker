@@ -13,6 +13,7 @@ export interface Application {
   coverletter?: boolean;
   status: string;
   length: string;
+  url: string;
 }
 
 export interface ApplicationState {
@@ -38,6 +39,7 @@ const initialState: ApplicationState = {
     coverletter: false,
     status: "",
     length: "",
+    url: "",
   },
   coverletter: "",
   isError: false,
@@ -213,6 +215,7 @@ export const groupSlice = createSlice({
           coverletter: false,
           status: "",
           length: "",
+          url: "",
         };
       })
       //Update an application

@@ -125,25 +125,25 @@ const AppDashboard = () => {
                                 loading={isLoading}
                                 dataSource={application}
                                 extra={
-                                    <div style={{ position: "absolute", top: 25, left: 25 }}> 
-                                    <Button 
-                                        style={{ marginRight: 8}} color={application.coverletter ? 'green' : 'orange'} 
-                                        variant='solid'
-                                        onClick={() => setModalOpen(true)}
-                                    >
-                                        {application.coverletter ? "Edit" : "Add"} Cover Letter
-                                    </Button>
-                                    <Button 
-                                        style={{ marginRight: 8}} color='blue' variant='solid'
-                                        loading={isLoadingMerge}
-                                        onClick={() => handleMergeDownload(application.coverletter ? true : false, 'santiago.fuentes@ucalgary.ca', application.company, coverletter)}
-                                    >
-                                        Download Application
-                                    </Button>
-                                    <Popconfirm title="Are you sure you want to delete this application?" onConfirm={onDelete} okText="Yes" cancelText="No" placement='bottomLeft'>
-                                        <Button color='red' variant='solid'>Delete</Button>
-                                    </Popconfirm>
-                                </div>}
+                                    <div style={{ position: "absolute", top: 25, left: 25 }}>
+                                        <Button
+                                            style={{ marginRight: 8 }} color={application.coverletter ? 'green' : 'orange'}
+                                            variant='solid'
+                                            onClick={() => setModalOpen(true)}
+                                        >
+                                            {application.coverletter ? "Edit" : "Add"} Cover Letter
+                                        </Button>
+                                        <Button
+                                            style={{ marginRight: 8 }} color='blue' variant='solid'
+                                            loading={isLoadingMerge}
+                                            onClick={() => handleMergeDownload(application.coverletter ? true : false, 'santiago.fuentes@ucalgary.ca', application.company, coverletter)}
+                                        >
+                                            Download Application
+                                        </Button>
+                                        <Popconfirm title="Are you sure you want to delete this application?" onConfirm={onDelete} okText="Yes" cancelText="No" placement='bottomLeft'>
+                                            <Button color='red' variant='solid'>Delete</Button>
+                                        </Popconfirm>
+                                    </div>}
                                 editable={{
                                     form: form,
                                     onSave: handleSave,

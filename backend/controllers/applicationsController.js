@@ -160,10 +160,10 @@ const getCoverLetter = async (req, res) => {
     const [result] = await pool.promise().query(query, [id]);
 
     if (result.length === 0) {
-      return res.status(200).json({ content: "" });
+      return res.status(200).json("");
     }
 
-    return res.status(200).json({ content: result[0].content });
+    return res.status(200).json(result[0].content);
   } catch (error) {
     console.error(error);
     return res.status(500).json(error);

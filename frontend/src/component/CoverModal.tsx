@@ -19,11 +19,9 @@ const CoverModal = ({ open, onClose, posting, company }: { open: boolean, onClos
     const { isLoading: isLoadingFile } = useSelector((state: RootState) => state.files);
     const { coverletter, isLoading: isLoadingSave, isError: isErrorSave } = useSelector((state: RootState) => state.applications);
 
-    console.log("CoverModal -> coverletter", coverletter)
-
     useEffect(() => {
         if (open) {
-            form.setFieldsValue({ coverletter: coverletter.content, email: 'santiago.fuentes@ucalgary.ca' });
+            form.setFieldsValue({ coverletter, email: 'santiago.fuentes@ucalgary.ca' });
         }
     }, [open, form, coverletter]);
 
@@ -139,7 +137,7 @@ const CoverModal = ({ open, onClose, posting, company }: { open: boolean, onClos
                     size="large"
                     type="primary"
                     onClick={generateCoverLetter}
-                    disabled={coverletter.content !== ''}
+                    disabled={coverletter || coverLetterContent ? true : false}
                     loading={isLoading}
                 >
                     Generate Cover Letter
