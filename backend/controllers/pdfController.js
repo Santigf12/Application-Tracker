@@ -241,81 +241,92 @@ const getOtherFiles = async (req, res) => {
 
 // functions to get resume, cover letter, and transcript files
 const getMergeFiles = async (req, res) => {
-    try {
-        const { email, company, content, coverletter } = req.body;
+  try {
+    const { email, company, content, coverletter } = req.body;
 
-        if (typeof coverletter === 'undefined') {
-            return res.status(400).json({ message: 'Missing coverLetter flag (0 or 1)' });
-        }
-
-        console.log("Searching for Resume and Transcript...");
-        const files = fs.readdirSync(UPLOADS_DIR);
-        const resumeFile = files.find(file => file.includes('resume') && file.endsWith('.odt'));
-        const transcriptFile = files.find(file => file.includes('Transcripts') && file.endsWith('.pdf'));
-
-        if (!resumeFile) {
-            return res.status(404).json({ message: 'Resume file not found, please upload a resume' });
-        }
-
-        if (!transcriptFile) {
-            return res.status(404).json({ message: 'Transcript file not found, please upload a transcript' });
-        }
-
-        const { default: PDFMerger } = await import('pdf-merger-js');
-        const merger = new PDFMerger();
-
-        const resumePath = path.join(UPLOADS_DIR, resumeFile);
-        const transcriptPath = path.join(UPLOADS_DIR, transcriptFile);
-
-        console.log("Converting Resume to PDF...");
-        const resumePdfPath = await convertFile(resumePath, "pdf");
-        await merger.add(resumePdfPath);
-
-        let coverLetterPdfPath = null;
-
-        // Only Generate Cover Letter if `coverLetter = 1`
-        if (coverletter == 1) {
-            if (!email || !company || !content) {
-                return res.status(400).json({ message: 'Missing required fields for cover letter generation' });
-            }
-
-            console.log("Generating Cover Letter ODT...");
-            const odtBuffer = await generateCoverLetterODT(email, company, content);
-
-            // Save ODT buffer to a temporary file
-            const coverLetterOdtPath = path.join(UPLOADS_DIR, `cover-letter-${Date.now()}.odt`);
-            fs.writeFileSync(coverLetterOdtPath, odtBuffer);
-
-            console.log("🔄 Converting Cover Letter to PDF...");
-            coverLetterPdfPath = await convertFile(coverLetterOdtPath, "pdf");
-            
-            await merger.add(coverLetterPdfPath);
-            fs.unlinkSync(coverLetterOdtPath); // Cleanup: Delete temporary ODT file
-        }
-
-        console.log("Adding Transcript PDF...");
-        await merger.add(transcriptPath);
-
-        const mergedPdfPath = path.join(UPLOADS_DIR, `merged-${Date.now()}.pdf`);
-        await merger.save(mergedPdfPath);
-
-        console.log(`Merged PDF saved: ${mergedPdfPath}`);
-
-        // Send the merged PDF as a response
-        res.download(mergedPdfPath, "merged.pdf", (err) => {
-            if (err) console.error("Error sending merged PDF:", err);
-
-            // Cleanup: Delete temporary files
-            fs.unlinkSync(resumePdfPath);
-            fs.unlinkSync(mergedPdfPath);
-            if (coverLetterPdfPath) fs.unlinkSync(coverLetterPdfPath); // Only delete if it was created
-        });
-
-    } catch (error) {
-        console.error("Error merging files:", error);
-        res.status(500).json({ message: "Error merging files" });
+    if (typeof coverletter === 'undefined') {
+      return res.status(400).json({ message: 'Missing coverLetter flag (0 or 1)' });
     }
+
+    console.log("Searching for Resume (required) and Transcript (optional)...");
+    const files = fs.readdirSync(UPLOADS_DIR);
+
+    // Required: resume (.odt)
+    const resumeFile = files.find(
+      (file) => /resume/i.test(file) && file.toLowerCase().endsWith('.odt')
+    );
+
+    if (!resumeFile) {
+      return res.status(404).json({ message: 'Resume file not found, please upload a resume' });
+    }
+
+    // Optional: transcript (.pdf)
+    const transcriptFile = files.find(
+      (file) => /transcript/i.test(file) && file.toLowerCase().endsWith('.pdf')
+    );
+    if (!transcriptFile) {
+      console.log("No transcript found. Proceeding without a transcript.");
+    }
+
+    const { default: PDFMerger } = await import('pdf-merger-js');
+    const merger = new PDFMerger();
+
+    const resumePath = path.join(UPLOADS_DIR, resumeFile);
+
+    console.log("Converting Resume to PDF...");
+    const resumePdfPath = await convertFile(resumePath, "pdf");
+    await merger.add(resumePdfPath);
+
+    let coverLetterPdfPath = null;
+
+    // Only generate & include a cover letter if coverletter == 1
+    if (coverletter == 1) {
+      if (!email || !company || !content) {
+        return res.status(400).json({ message: 'Missing required fields for cover letter generation' });
+      }
+
+      console.log("Generating Cover Letter ODT...");
+      const odtBuffer = await generateCoverLetterODT(email, company, content);
+
+      const coverLetterOdtPath = path.join(UPLOADS_DIR, `cover-letter-${Date.now()}.odt`);
+      fs.writeFileSync(coverLetterOdtPath, odtBuffer);
+
+      console.log("Converting Cover Letter to PDF...");
+      coverLetterPdfPath = await convertFile(coverLetterOdtPath, "pdf");
+      await merger.add(coverLetterPdfPath);
+
+      // Cleanup temp ODT
+      fs.unlinkSync(coverLetterOdtPath);
+    }
+
+    // Add transcript only if it exists
+    if (transcriptFile) {
+      const transcriptPath = path.join(UPLOADS_DIR, transcriptFile);
+      console.log("Adding Transcript PDF...");
+      await merger.add(transcriptPath);
+    }
+
+    const mergedPdfPath = path.join(UPLOADS_DIR, `merged-${Date.now()}.pdf`);
+    await merger.save(mergedPdfPath);
+    console.log(`Merged PDF saved: ${mergedPdfPath}`);
+
+    // Send the merged PDF and clean up temp files
+    res.download(mergedPdfPath, "merged.pdf", (err) => {
+      if (err) console.error("Error sending merged PDF:", err);
+
+      try { fs.unlinkSync(resumePdfPath); } catch (_) {}
+      try { fs.unlinkSync(mergedPdfPath); } catch (_) {}
+      if (coverLetterPdfPath) {
+        try { fs.unlinkSync(coverLetterPdfPath); } catch (_) {}
+      }
+    });
+
+  } catch (error) {
+    console.error("Error merging files:", error);
+    res.status(500).json({ message: "Error merging files" });
+  }
 };
+
 
 module.exports = {
     createCoverLetter,

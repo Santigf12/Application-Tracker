@@ -235,67 +235,6 @@ const Home = () => {
     
     return (
         <Row gutter={[16, 0]} style={{ minHeight: "100%" }}>
-            <Col style={{ display: "flex", flexDirection: "column" }} xs={0} sm={0} md={0} lg={3} xl={3}>
-                <Card bordered={true} style={{ flex: 1, display: "flex", alignItems: "start", justifyContent: "space-evenly" }}>
-                    <Space direction="vertical" style={{ width: "100%", textAlign: "center" }}>
-                        <Typography.Title level={5}>Application Stats</Typography.Title>
-                        <Descriptions
-                            column={1}
-                            layout='vertical'
-                            size="default"
-                        >
-                            <Descriptions.Item label="Last Updated" span={3}>{formatDates(applications.map((application) => application.added).sort().reverse()[0])}</Descriptions.Item>
-                        </Descriptions>
-                        <Descriptions
-                            column={1}
-                            layout='vertical'
-                            size="default"
-                        >
-                            {
-                                applications.length > 0 ? (
-                                    <>
-                                        <Descriptions.Item label="Total" span={1}>{applications.length}</Descriptions.Item>
-                                        <Descriptions.Item label="Pending" span={1}>{applications.filter((application) => application.status === "Applied").length}</Descriptions.Item>
-                                        <Descriptions.Item label="Rejected" span={1}>{applications.filter((application) => application.status === "Rejected").length}</Descriptions.Item>
-                                        <Descriptions.Item label="Archived" span={1}>{applications.filter((application) => application.status === "Archived").length}</Descriptions.Item>
-
-                                    </>
-                                ) : (
-                                    <>
-                                        <Descriptions.Item label="Total" span={1}>0</Descriptions.Item>
-                                        <Descriptions.Item label="Pending" span={1}>0</Descriptions.Item>
-                                        <Descriptions.Item label="Rejected" span={1}>0</Descriptions.Item>
-                                        <Descriptions.Item label="Archived" span={1}>0</Descriptions.Item>
-                                    </>
-                                )
-
-                            }
-                        </Descriptions>
-                        <Descriptions
-
-                            column={1}
-                            layout='vertical'
-                            size="default"
-                        >
-                            {
-                                applications.length > 0 ? (
-                                    <>
-                                        <Descriptions.Item label="Alberta" span={1}>{applications.filter((application) => application.location.includes("AB")).length}</Descriptions.Item>
-                                        <Descriptions.Item label="British Columbia" span={1}>{applications.filter((application) => application.location.includes("BC")).length}</Descriptions.Item>
-                                        <Descriptions.Item label="Ontario" span={1}>{applications.filter((application) => application.location.includes("ON")).length}</Descriptions.Item>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Descriptions.Item label="Alberta" span={1}>0</Descriptions.Item>
-                                        <Descriptions.Item label="British Columbia" span={1}>0</Descriptions.Item>
-                                        <Descriptions.Item label="Ontario" span={1}>0</Descriptions.Item>
-                                    </>
-                                )
-                            }
-                        </Descriptions>
-                    </Space>
-                </Card>
-            </Col>
             <Col flex="auto">
                 <Card bordered={true} style={{ minHeight: 50, width: '100%', textAlign: "center" }}>
                     <ProTable<Application>

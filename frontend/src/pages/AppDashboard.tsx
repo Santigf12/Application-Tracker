@@ -81,7 +81,7 @@ const AppDashboard = () => {
             console.error("Failed to download merged document: ", error);
             notification.error({
                 message: 'Error',
-                description: 'Make sure you have a resume and transcript uploaded',
+                description: 'Make sure you have a resume uploaded',
                 placement: 'topLeft'
             });
         }
