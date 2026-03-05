@@ -2,7 +2,8 @@ name: Build and Push Docker Images
 
 on:
   push:
-    branches: ['main']  # Adjust to the branch you'd like to trigger this workflow
+    branches: ["main"]
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
@@ -40,9 +41,9 @@ jobs:
         id: backend-push
         uses: docker/build-push-action@v4
         with:
-          context: .  # Main directory as context
+          context: . # Main directory as context
           push: true
-          file: ./Dockerfile.backend  # Specify the Dockerfile for backend
+          file: ./Dockerfile.backend # Specify the Dockerfile for backend
           tags: |
             ${{ steps.backend-meta.outputs.tags }}
             ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:latest
@@ -59,9 +60,9 @@ jobs:
         id: frontend-push
         uses: docker/build-push-action@v4
         with:
-          context: .  # Main directory as context
+          context: . # Main directory as context
           push: true
-          file: ./Dockerfile.frontend  # Specify the Dockerfile for frontend
+          file: ./Dockerfile.frontend # Specify the Dockerfile for frontend
           tags: |
             ${{ steps.frontend-meta.outputs.tags }}
             ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:latest
