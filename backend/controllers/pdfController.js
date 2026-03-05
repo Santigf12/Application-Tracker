@@ -328,14 +328,15 @@ const getMergeFiles = async (req, res) => {
 };
 
 
+
 module.exports = {
-    createCoverLetter,
-    uploadResume,
-    getResumeFiles,
-    deleteFile,
-    uploadCoverLetterTemplate,
-    getCoverLetterTemplate,
-    uploadOtherFiles,
-    getOtherFiles,
-    getMergeFiles
+  createCoverLetter,
+  uploadResume,
+  getResumeFiles,
+  deleteFile,
+  uploadCoverLetterTemplate,
+  getCoverLetterTemplate,
+  uploadOtherFiles,
+  getOtherFiles,
+  getMergeFiles
 };
