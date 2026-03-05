@@ -136,7 +136,7 @@ const AppDashboard = () => {
                                         <Button
                                             style={{ marginRight: 8 }} color='blue' variant='solid'
                                             loading={isLoadingMerge}
-                                            onClick={() => handleMergeDownload(application.coverletter ? true : false, 'santiago.fuentes@ucalgary.ca', application.company, coverletter)}
+                                            onClick={() => handleMergeDownload(application.coverletter ? true : false, 'jobs@fuentes.it.com', application.company, coverletter)}
                                         >
                                             Download Application
                                         </Button>
