@@ -1,15 +1,22 @@
-const OpenAI = require('openai');
-require('dotenv').config();
-const scrapeJobPosting = require('../helpers/scraper');
+import os
 
+from dotenv import load_dotenv
+from fastapi import APIRouter, HTTPException
+from openai import OpenAI
 
-const client = new OpenAI({
-    organization: process.env.OPENAI_ORG_ID,
-    apiKey: process.env.OPENAI_API_KEY,
-});
+from app.helpers.scraper import scrape_job_posting
+from app.schemas.tools import CoverLetterRequest, ScrapePostingRequest
 
-// Your resume information
-const resumeInfo = `
+load_dotenv()
+
+router = APIRouter()
+
+client = OpenAI(
+    organization=os.getenv("OPENAI_ORG_ID"),
+    api_key=os.getenv("OPENAI_API_KEY"),
+)
+
+resume_info = """
 Summary:
 I am a highly motivated 4th-year Software Engineering student with a strong foundation in programming, software development, cloud platforms, and system administration. Passionate about solving complex problems and building innovative software solutions. Seeking a summer internship to further enhance technical skills and gain hands-on experience.
 
@@ -53,62 +60,70 @@ Note Taking App (March 2023)
 
 GitHub: https://github.com/Santigf12
 Portfolio: https://santigf12.github.io/
-`;
+"""
 
-const generateCoverLetterContent = async (req, res) => {
-    try {
 
-        const { company, jobPosting } = req.body;
+@router.post("/cover-letter")
+def generate_cover_letter_content(payload: CoverLetterRequest):
+    try:
+        company = payload.company
+        job_posting = payload.jobPosting
 
-        if (!company || !jobPosting) {
-            return res.status(400).json({ message: 'Company and job posting details are required' });
-        }
+        if not company or not job_posting:
+            raise HTTPException(
+                status_code=400,
+                detail="Company and job posting details are required",
+            )
 
-        const prompt = `
-        You are an assistant that writes cover letters. Using the following job posting details, create a professional cover letter that highlights the candidate's qualifications, skills, and experience. The candidate's resume information is provided below.
+        prompt = f"""
+You are an assistant that writes cover letters. Using the following job posting details, create a professional cover letter that highlights the candidate's qualifications, skills, and experience. The candidate's resume information is provided below.
 
-        Company Name: ${company}
+Company Name: {company}
 
-        Job Posting Information:
-        ${jobPosting}
+Job Posting Information:
+{job_posting}
 
-        Resume Information:
-        ${resumeInfo}
+Resume Information:
+{resume_info}
 
-        Please generate a cover letter for the job posting, focusing on how the candidate's skills and experience match the requirements of the position.
-        `;
+Please generate a cover letter for the job posting, focusing on how the candidate's skills and experience match the requirements of the position.
+"""
 
-        const response = await client.chat.completions.create({
-            model: "gpt-4o",
-            messages: [{ role: "system", content: "You are an assistant that writes cover letters." }, 
-                { role: "user", content: prompt }
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are an assistant that writes cover letters.",
+                },
+                {"role": "user", "content": prompt},
             ],
-            max_tokens: 2000,
-        });
+            max_tokens=2000,
+        )
 
-        const coverLetter = response.choices[0].message.content;
-        return res.status(200).json(coverLetter);
-    } catch (error) {
-        console.error('Error generating cover letter:', error);
-        return res.status(500).json(error);
-    }
-}
+        cover_letter = response.choices[0].message.content
+        return cover_letter
 
-const scrapePosting = async (req, res) => {
-    try {
-        const { url } = req.body;
+    except HTTPException:
+        raise
+    except Exception as error:
+        print("Error generating cover letter:", error)
+        raise HTTPException(status_code=500, detail=str(error))
 
-        if (!url) {
-            return res.status(400).json({ message: 'URL is required' });
-        }
 
-        const response = await scrapeJobPosting(url);
+@router.post("/scrape-posting")
+def scrape_posting(payload: ScrapePostingRequest):
+    try:
+        url = str(payload.url)
 
-        return res.status(200).json(response);
-    } catch (error) {
-        console.error('Error scraping job posting:', error);
-        return res.status(500).json(error);
-    }
-}
+        if not url:
+            raise HTTPException(status_code=400, detail="URL is required")
 
-module.exports = { generateCoverLetterContent, scrapePosting };
+        response = scrape_job_posting(url)
+        return response
+
+    except HTTPException:
+        raise
+    except Exception as error:
+        print("Error scraping job posting:", error)
+        raise HTTPException(status_code=500, detail=str(error))
