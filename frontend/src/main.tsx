@@ -1,15 +1,19 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+
 import App from './App';
 
-import "antd/dist/reset.css"; // Import Ant Design styles
-import { Provider } from 'react-redux';
-import { store } from './app/store';
+import 'antd/dist/reset.css';
+
+const queryClient = new QueryClient();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <Provider store={store}>
+    <QueryClientProvider client={queryClient}>
         <App />
-    </Provider>
-  </React.StrictMode>,
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
+  </React.StrictMode>
 );
