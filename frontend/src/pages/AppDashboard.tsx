@@ -326,6 +326,7 @@ const AppDashboard = () => {
         onClose={() => setModalOpen(false)}
         posting={currentApplication.posting}
         company={currentApplication.company}
+        position={currentApplication.title}
       />
     </Row>
   );

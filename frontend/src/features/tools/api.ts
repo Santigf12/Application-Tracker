@@ -11,13 +11,16 @@ const toolsApi = axios.create({
 
 const getCoverLetterContent = async ({
   company,
+  position,
   jobPosting,
 }: GenerateCoverLetterPayload): Promise<string> => {
   const { data } = await toolsApi.post('/cover-letter', {
     company,
+    position,
     jobPosting,
   });
-  return data;
+
+  return data.content;
 };
 
 const getJobPostingContent = async ({ url }: ScrapePostingPayload): Promise<JobPostingContent> => {

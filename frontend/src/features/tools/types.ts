@@ -9,10 +9,11 @@ export interface JobPostingContent {
   url: string;
 }
 
-export interface GenerateCoverLetterPayload {
+export type GenerateCoverLetterPayload = {
   company: string;
+  position: string;
   jobPosting: string;
-}
+};
 
 export interface ScrapePostingPayload {
   url: string;

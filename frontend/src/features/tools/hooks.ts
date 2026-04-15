@@ -24,8 +24,8 @@ const getErrorMessage = (error: unknown): string => {
 
 export const useGenerateCoverLetter = () => {
   return useMutation({
-    mutationFn: ({ company, jobPosting }: GenerateCoverLetterPayload) =>
-      getCoverLetterContent({ company, jobPosting }),
+    mutationFn: ({ company, position, jobPosting }: GenerateCoverLetterPayload) =>
+      getCoverLetterContent({ company, position, jobPosting }),
     meta: {
       getErrorMessage,
     },

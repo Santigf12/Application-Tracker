@@ -5,7 +5,7 @@ import { useCoverLetter, useSaveCoverLetter } from '../features/applications/hoo
 import { useCoverLetterFile } from '../features/files/hooks';
 import { useGenerateCoverLetter } from '../features/tools/hooks';
 
-const CoverModal = ({ open, onClose, posting, company }: { open: boolean, onClose: () => void, posting: string, company: string }) => {
+const CoverModal = ({ open, onClose, posting, company, position }: { open: boolean, onClose: () => void, posting: string, company: string, position: string; }) => {
   const { id = '' } = useParams();
   const [form] = Form.useForm();
 
@@ -27,6 +27,7 @@ const CoverModal = ({ open, onClose, posting, company }: { open: boolean, onClos
     try {
       const result = await generateCoverLetterMutation.mutateAsync({
         company,
+        position,
         jobPosting: posting,
       });
 
