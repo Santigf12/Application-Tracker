@@ -8,6 +8,7 @@ if (!API_URL) {
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  skipTrailingSlashRedirect: true,
   async rewrites() {
     return [
       {
