@@ -12,6 +12,7 @@ WORKDIR /app
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY frontend/ .
 
+ENV API_URL=http://backend:5000
 ENV NODE_ENV=production
 
 RUN npm run build
