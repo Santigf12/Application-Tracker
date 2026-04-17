@@ -3,25 +3,20 @@ services:
     image: ghcr.io/santigf12/application-tracker-backend:latest
     expose:
       - "5000"
-      
-    environment:
-      - NODE_ENV=production 
-
     networks:
-      - default ##default network within the stack
-    
+      - default
+
   frontend:
     image: ghcr.io/santigf12/application-tracker-frontend:latest
     ports:
-      - "5857:80"
-
+      - "5857:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:5000
     networks:
       - default
-    
     depends_on:
       - backend
 
 networks:
   default:
     driver: bridge
-
