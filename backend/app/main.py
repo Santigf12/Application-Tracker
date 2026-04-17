@@ -5,11 +5,12 @@ from app.routers import applications, pdf, tools
 
 app = FastAPI()
 
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",
-        "http://172.16.1.4",
+        "http://frontend:3000",   # Docker
+        "http://localhost:3000",  # Local dev
     ],
     allow_credentials=True,
     allow_methods=["*"],
