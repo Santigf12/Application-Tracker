@@ -1,3 +1,5 @@
+import CreatePageLoader from './loader';
+
 export default function CreatePage() {
-  return <div>Create page</div>;
+  return <CreatePageLoader />;
 }

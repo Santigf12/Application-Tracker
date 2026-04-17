@@ -10,7 +10,7 @@ import {
 import type { Application } from '@/lib/features/applications/types';
 import { useMergeFile } from '@/lib/features/files/hooks';
 import { ProDescriptions } from '@ant-design/pro-components';
-import { Button, Card, Col, Form, message, notification, Popconfirm, Row, Space, Typography } from 'antd';
+import { App, Button, Card, Col, Form, Popconfirm, Row, Space, Typography } from 'antd';
 import { DateTime } from 'luxon';
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
@@ -29,6 +29,8 @@ export default function ApplicationDashboardPage() {
 
   const { data: application, isLoading: isLoadingApplication } = useApplication(id, !!id);
   const { data: coverletter = '' } = useCoverLetter(id, !!id);
+  
+  const { message, notification } = App.useApp();
 
   const updateMutation = useUpdateApplication();
   const deleteMutation = useDeleteApplication();
@@ -97,7 +99,7 @@ export default function ApplicationDashboardPage() {
     } catch (error) {
       console.error('Failed to download merged document:', error);
       notification.error({
-        message: 'Error',
+        title: 'Error',
         description: 'Make sure you have a resume uploaded',
         placement: 'topLeft',
       });
@@ -107,7 +109,7 @@ export default function ApplicationDashboardPage() {
   const handleButtonCopy = (link: string) => {
     navigator.clipboard.writeText(link);
     notification.success({
-      message: 'Link copied to clipboard',
+      title: 'Link copied to clipboard',
       placement: 'topLeft',
       duration: 1.0,
     });
@@ -131,7 +133,7 @@ export default function ApplicationDashboardPage() {
     <Row gutter={[8, 0]}>
       <Col span={3}>
         <Card variant="borderless" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-          <Space direction="vertical" size="small" style={{ width: '100%', flex: 1 }}>
+          <Space orientation="vertical" size="small" style={{ width: '100%', flex: 1 }}>
             <Typography.Title level={4}>Useful Links</Typography.Title>
 
             <Button block size="large" onClick={() => handleButtonCopy(currentApplication.url)}>

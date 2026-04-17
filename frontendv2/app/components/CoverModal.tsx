@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Form, Input, Modal, Space, notification } from 'antd';
+import { App, Button, Form, Input, Modal, Space } from 'antd';
 import { useParams } from 'next/navigation';
 import { useEffect } from 'react';
 
@@ -12,6 +12,7 @@ export default function CoverModal({ open, onClose, posting, company, position, 
   const params = useParams<{ id: string }>();
   const id = params?.id ?? '';
   const [form] = Form.useForm();
+  const { notification } = App.useApp();
 
   const { data: coverletter = '' } = useCoverLetter(id, !!id && open);
   const saveCoverLetterMutation = useSaveCoverLetter();

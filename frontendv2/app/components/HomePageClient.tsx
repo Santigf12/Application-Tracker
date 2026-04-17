@@ -19,7 +19,7 @@ import {
 import type { SortOrder } from 'antd/es/table/interface';
 import { DateTime } from 'luxon';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Key, useMemo, useState } from 'react';
+import { Key, useCallback, useMemo, useState } from 'react';
 
 const provinceMap: Record<string, string> = {
   AB: 'Alberta',
@@ -261,6 +261,11 @@ export default function HomePageClient() {
     },
   ];
 
+  // Add this near your other state/callbacks, at the top level of the component:
+  const handleTabChange = useCallback((key: Key | undefined) => {
+    setTimeout(() => setSelectedTab(key as string), 0);
+  }, []);
+
   return (
     <Row gutter={[16, 0]} style={{ minHeight: '100%' }}>
       <Col flex="auto">
@@ -313,7 +318,7 @@ export default function HomePageClient() {
             }}
             pagination={{
               pageSize: 14,
-              position: ['topLeft'],
+              placement: ['topStart'],
               current: currentPage,
               onChange: handlePageChange,
               style: { marginBottom: 15, marginTop: 0 },
@@ -354,7 +359,7 @@ export default function HomePageClient() {
               menu: {
                 type: 'tab',
                 activeKey: selectedTab,
-                onChange: (key: Key | undefined) => setSelectedTab(key as string),
+                onChange: handleTabChange,
                 items: [
                   {
                     label: (
