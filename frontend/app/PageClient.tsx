@@ -1,25 +1,26 @@
 'use client';
 
 import { useApplications, useUpdateApplication } from '@/lib/features/applications/hooks';
-import { Application } from '@/lib/features/applications/types';
-import { LightFilter, ProTable } from '@ant-design/pro-components';
+import type { Application } from '@/lib/features/applications/types';
+import { LightFilter } from '@ant-design/pro-components';
 import {
-  Badge,
-  Button,
-  Card,
-  Col,
-  DatePicker,
-  Radio,
-  Row,
-  Space,
-  Tag,
-  Tooltip,
-  Typography,
+    Badge,
+    Button,
+    Card,
+    Col,
+    DatePicker,
+    Radio,
+    Row,
+    Space,
+    Tag,
+    Tooltip,
+    Typography,
 } from 'antd';
 import type { SortOrder } from 'antd/es/table/interface';
 import { DateTime } from 'luxon';
+import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Key, useCallback, useMemo, useState } from 'react';
+import { type Key, useCallback, useMemo, useState } from 'react';
 
 const provinceMap: Record<string, string> = {
   AB: 'Alberta',
@@ -38,7 +39,12 @@ const provinceMap: Record<string, string> = {
   Remote: 'Remote',
 };
 
-export default function HomePageClient() {
+const ProTable = dynamic(
+  () => import('@ant-design/pro-components').then((mod) => mod.ProTable),
+  { ssr: false },
+) as typeof import('@ant-design/pro-components').ProTable;
+
+export default function PageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -261,7 +267,6 @@ export default function HomePageClient() {
     },
   ];
 
-  // Add this near your other state/callbacks, at the top level of the component:
   const handleTabChange = useCallback((key: Key | undefined) => {
     setTimeout(() => setSelectedTab(key as string), 0);
   }, []);

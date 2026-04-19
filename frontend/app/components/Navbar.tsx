@@ -7,9 +7,11 @@ import { usePathname } from 'next/navigation';
 const Navbar = () => {
   const pathname = usePathname();
 
+  const selectedKey = pathname.includes('/profile') ? '/profile' : pathname;
+
   return (
     <Menu
-      selectedKeys={[pathname]}
+      selectedKeys={[selectedKey]}
       mode="horizontal"
       theme="dark"
       style={{ flex: 1, minWidth: 0 }}
@@ -25,6 +27,10 @@ const Navbar = () => {
         {
           key: '/files',
           label: <Link href="/files">Files</Link>,
+        },
+        {
+          key: '/profile',
+          label: <Link href="/profile/skills">Profile</Link>,
         },
       ]}
     />
