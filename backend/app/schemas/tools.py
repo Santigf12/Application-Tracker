@@ -9,3 +9,8 @@ class CoverLetterRequest(BaseModel):
 
 class ScrapePostingRequest(BaseModel):
     url: HttpUrl
+
+class TailoredProfileRequest(BaseModel):
+    position: str
+    company: str | None = None
+    jobPosting: str

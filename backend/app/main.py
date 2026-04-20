@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import applications, pdf, tools, profile
+from app.routers import applications, pdf, tools, profile, resume
 
 app = FastAPI()
 
@@ -21,3 +21,4 @@ app.include_router(applications.router, prefix="/api/applications", tags=["appli
 app.include_router(pdf.router, prefix="/api/pdf", tags=["pdf"])
 app.include_router(tools.router, prefix="/api/tools", tags=["tools"])
 app.include_router(profile.router, prefix="/api/profile", tags=["profile"])
+app.include_router(resume.router, prefix="/api/resume", tags=["resume"])
