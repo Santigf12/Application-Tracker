@@ -5,9 +5,9 @@ import { useParams } from 'next/navigation';
 import { useEffect } from 'react';
 
 import {
-    useApplication,
-    useCoverLetter,
-    useSaveCoverLetter,
+  useApplication,
+  useCoverLetter,
+  useSaveCoverLetter,
 } from '@/lib/features/applications/hooks';
 import { useCoverLetterFile } from '@/lib/features/files/hooks';
 import { useGenerateCoverLetter } from '@/lib/features/tools/hooks';
@@ -46,13 +46,13 @@ export default function CoverLetterTabPage() {
       form.setFieldsValue({ coverletter: result });
 
       notification.success({
-        message: 'Success',
+        title: 'Success',
         description: 'Cover letter generated successfully!',
         placement: 'topLeft',
       });
     } catch (error) {
       notification.error({
-        message: 'Error',
+        title: 'Error',
         description: 'Failed to generate cover letter',
         placement: 'topLeft',
       });
@@ -80,7 +80,7 @@ export default function CoverLetterTabPage() {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       notification.error({
-        message: 'Error',
+        title: 'Error',
         description: 'Failed to download cover letter',
         placement: 'topLeft',
       });
@@ -97,13 +97,13 @@ export default function CoverLetterTabPage() {
       });
 
       notification.success({
-        message: 'Success',
+        title: 'Success',
         description: 'Cover letter saved successfully!',
         placement: 'topLeft',
       });
     } catch (error) {
       notification.error({
-        message: 'Error',
+        title: 'Error',
         description: 'Failed to save cover letter',
         placement: 'topLeft',
       });

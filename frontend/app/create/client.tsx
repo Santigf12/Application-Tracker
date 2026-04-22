@@ -27,7 +27,7 @@ export default function CreatePageClient() {
       await createApplicationMutation.mutateAsync(payload);
 
       notification.success({
-        message: 'Success',
+        title: 'Success',
         description: 'Application created successfully!',
         placement: 'topLeft',
       });
@@ -36,7 +36,7 @@ export default function CreatePageClient() {
     } catch (error) {
       console.error(error);
       notification.error({
-        message: 'Error',
+        title: 'Error',
         description: 'Failed to create application',
         placement: 'topLeft',
       });
@@ -60,14 +60,14 @@ export default function CreatePageClient() {
       });
 
       notification.success({
-        message: 'Success',
+        title: 'Success',
         description: 'Autofill completed!',
         placement: 'topLeft',
       });
     } catch (error) {
       console.error(error);
       notification.error({
-        message: 'Error',
+        title: 'Error',
         description: 'Failed to fetch posting',
         placement: 'topLeft',
       });

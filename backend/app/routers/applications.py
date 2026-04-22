@@ -1,3 +1,5 @@
+import json
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -7,6 +9,8 @@ from app.schemas.applications import (
     ApplicationCreate,
     ApplicationUpdate,
     CoverLetterSave,
+    ResumeSave,
+    ResumeManifest,
 )
 
 router = APIRouter()
@@ -50,7 +54,8 @@ def get_application_by_id(id: str, db: Session = Depends(get_db)):
                 CAST(applied AS CHAR) AS applied,
                 status, 
                 posting,
-                coverletter
+                coverletter,
+                resume
             FROM job_applications
             WHERE id = :id;
         """)
@@ -215,5 +220,73 @@ def get_cover_letter(id: str, db: Session = Depends(get_db)):
             return ""
 
         return result._mapping["content"]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/{id}/resume")
+def save_resume(
+    id: str,
+    payload: ResumeSave,
+    db: Session = Depends(get_db),
+):
+    manifest_dict = payload.manifest.model_dump(exclude_none=True)
+
+    if not manifest_dict:
+        raise HTTPException(status_code=400, detail="Manifest cannot be empty")
+
+    try:
+        query1 = text("""
+            INSERT INTO tailored_resumes (job_application_id, include_publications, manifest)
+            VALUES (:job_application_id, :include_publications, CAST(:manifest AS JSON))
+            ON DUPLICATE KEY UPDATE
+                include_publications = VALUES(include_publications),
+                manifest = VALUES(manifest);
+        """)
+
+        query2 = text("""
+            UPDATE job_applications
+            SET resume = 1
+            WHERE id = :id;
+        """)
+
+        db.execute(
+            query1,
+            {
+                "job_application_id": id,
+                "include_publications": 1 if payload.include_publications else 0,
+                "manifest": json.dumps(manifest_dict),
+            },
+        )
+        db.execute(query2, {"id": id})
+        db.commit()
+
+        return {"success": True, "message": "Resume saved"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/resume/{id}")
+def get_resume(id: str, db: Session = Depends(get_db)):
+    try:
+        query = text("""
+            SELECT include_publications, manifest
+            FROM tailored_resumes
+            WHERE job_application_id = :id;
+        """)
+        result = db.execute(query, {"id": id}).fetchone()
+
+        if not result:
+            return None
+
+        manifest = result._mapping["manifest"]
+        if isinstance(manifest, str):
+            manifest = json.loads(manifest)
+
+        return {
+            "include_publications": bool(result._mapping["include_publications"]),
+            "manifest": manifest,
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

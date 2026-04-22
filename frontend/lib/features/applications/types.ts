@@ -1,3 +1,5 @@
+import type { GenerateResumePayload } from "@/lib/features/tools/types";
+
 export interface Application {
   id?: string;
   title: string;
@@ -7,6 +9,7 @@ export interface Application {
   added: string;
   applied: string;
   coverletter?: boolean;
+  resume?: boolean;
   status: string;
   length: string;
   url: string;
@@ -15,6 +18,17 @@ export interface Application {
 export interface SaveCoverLetterPayload {
   id: string;
   content: string;
+}
+
+export interface SaveResumePayload {
+  id: string;
+  include_publications: boolean;
+  manifest: GenerateResumePayload;
+}
+
+export interface SavedResumeResponse {
+  include_publications: boolean;
+  manifest: GenerateResumePayload;
 }
 
 export interface UpdateApplicationPayload {

@@ -6,10 +6,12 @@ import {
   getAllApplications,
   getApplicationById,
   getCoverLetter,
+  getResume,
   saveCoverLetter,
+  saveResume,
   updateApplication,
 } from "./api";
-import type { Application, SaveCoverLetterPayload, UpdateApplicationPayload } from "./types";
+import type { Application, SaveCoverLetterPayload, SaveResumePayload, UpdateApplicationPayload } from "./types";
 
 const applicationKeys = {
   all: ["applications"] as const,
@@ -18,6 +20,7 @@ const applicationKeys = {
   details: () => [...applicationKeys.all, "detail"] as const,
   detail: (id: string) => [...applicationKeys.details(), id] as const,
   coverLetter: (id: string) => [...applicationKeys.all, "cover-letter", id] as const,
+  resume: (id: string) => [...applicationKeys.all, "resume", id] as const,
 };
 
 export const useApplications = () => {
@@ -39,6 +42,14 @@ export const useCoverLetter = (id: string, enabled = true) => {
   return useQuery({
     queryKey: applicationKeys.coverLetter(id),
     queryFn: () => getCoverLetter(id),
+    enabled: enabled && !!id,
+  });
+};
+
+export const useResume = (id: string, enabled = true) => {
+  return useQuery({
+    queryKey: applicationKeys.resume(id),
+    queryFn: () => getResume(id),
     enabled: enabled && !!id,
   });
 };
@@ -83,6 +94,7 @@ export const useDeleteApplication = () => {
       queryClient.invalidateQueries({ queryKey: applicationKeys.all });
       queryClient.removeQueries({ queryKey: applicationKeys.detail(id) });
       queryClient.removeQueries({ queryKey: applicationKeys.coverLetter(id) });
+      queryClient.removeQueries({ queryKey: applicationKeys.resume(id) });
     },
     meta: {
       getErrorMessage,
@@ -102,6 +114,26 @@ export const useSaveCoverLetter = () => {
       });
       queryClient.invalidateQueries({
         queryKey: applicationKeys.coverLetter(variables.id),
+      });
+    },
+    meta: {
+      getErrorMessage,
+    },
+  });
+};
+
+export const useSaveResume = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, include_publications, manifest }: SaveResumePayload) => saveResume({ id, include_publications, manifest }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: applicationKeys.all });
+      queryClient.invalidateQueries({
+        queryKey: applicationKeys.detail(variables.id),
+      });
+      queryClient.invalidateQueries({
+        queryKey: applicationKeys.resume(variables.id),
       });
     },
     meta: {

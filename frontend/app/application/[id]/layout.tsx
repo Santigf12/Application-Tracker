@@ -45,13 +45,13 @@ export default function ApplicationLayout({ children }: { children: ReactNode })
     try {
       await navigator.clipboard.writeText(link);
       notification.success({
-        message: `${title} copied`,
+        title: `${title} copied`,
         placement: 'topLeft',
         duration: 1,
       });
     } catch (error) {
       notification.error({
-        message: 'Failed to copy link',
+        title: 'Failed to copy link',
         placement: 'topLeft',
       });
     }

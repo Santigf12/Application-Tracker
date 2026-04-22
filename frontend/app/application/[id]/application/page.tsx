@@ -1,10 +1,10 @@
 'use client';
 
 import {
-    useApplication,
-    useCoverLetter,
-    useDeleteApplication,
-    useUpdateApplication,
+  useApplication,
+  useCoverLetter,
+  useDeleteApplication,
+  useUpdateApplication,
 } from '@/lib/features/applications/hooks';
 import type { Application } from '@/lib/features/applications/types';
 import { useMergeFile } from '@/lib/features/files/hooks';
@@ -122,7 +122,7 @@ export default function ApplicationTabPage() {
       extra={
         <>
           <Button
-            style={{ marginRight: 8 }}
+            
             color="blue"
             variant="solid"
             loading={mergeFileMutation.isPending}

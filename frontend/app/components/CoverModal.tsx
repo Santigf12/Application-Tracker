@@ -39,14 +39,14 @@ export default function CoverModal({ open, onClose, posting, company, position, 
       form.setFieldsValue({ coverletter: result });
 
       notification.success({
-        message: 'Success',
+        title: 'Success',
         description: 'Cover letter generated successfully!',
         placement: 'topLeft',
       });
     } catch (error) {
       console.error('Failed to generate cover letter:', error);
       notification.error({
-        message: 'Error',
+        title: 'Error',
         description: 'Failed to generate cover letter',
         placement: 'topLeft',
       });
@@ -77,7 +77,7 @@ export default function CoverModal({ open, onClose, posting, company, position, 
     } catch (error) {
       console.error('Failed to download cover letter:', error);
       notification.error({
-        message: 'Error',
+        title: 'Error',
         description: 'Failed to download cover letter',
         placement: 'topLeft',
       });
@@ -94,14 +94,14 @@ export default function CoverModal({ open, onClose, posting, company, position, 
       });
 
       notification.success({
-        message: 'Success',
+        title: 'Success',
         description: 'Cover letter saved successfully!',
         placement: 'topLeft',
       });
     } catch (error) {
       console.error('Failed to save cover letter:', error);
       notification.error({
-        message: 'Error',
+        title: 'Error',
         description: 'Failed to save cover letter',
         placement: 'topLeft',
       });

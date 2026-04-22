@@ -4,9 +4,9 @@ import zipfile
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
-import requests
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException
+from openai import OpenAI
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -25,11 +25,17 @@ router = APIRouter()
 BASE_DIR = Path(__file__).resolve().parents[2]
 TEMPLATES_DIR = BASE_DIR / "templates"
 
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
-OLLAMA_NUM_CTX = int(os.getenv("OLLAMA_NUM_CTX", "4096"))
-OLLAMA_NUM_PREDICT = int(os.getenv("OLLAMA_NUM_PREDICT", "700"))
-OLLAMA_TEMPERATURE = float(os.getenv("OLLAMA_TEMPERATURE", "0.4"))
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_ORG_ID = os.getenv("OPENAI_ORG_ID")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-5.4-mini")
+
+if not OPENAI_API_KEY:
+    raise RuntimeError("OPENAI_API_KEY is not set.")
+
+openai_client = OpenAI(
+    api_key=OPENAI_API_KEY,
+    organization=OPENAI_ORG_ID or None,
+)
 
 EDUCATION = [
     {
@@ -51,37 +57,76 @@ PUBLICATIONS = [
     }
 ]
 
+TAILOR_PROFILE_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "include_publication": {"type": "boolean"},
+        "selected_experiences": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "id": {"type": "string"},
+                    "selected_bullet_ids": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                    },
+                },
+                "required": ["id", "selected_bullet_ids"],
+            },
+        },
+        "selected_projects": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "id": {"type": "string"},
+                    "selected_bullet_ids": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                    },
+                },
+                "required": ["id", "selected_bullet_ids"],
+            },
+        },
+        "notes": {"type": "string"},
+    },
+    "required": [
+        "include_publication",
+        "selected_experiences",
+        "selected_projects",
+        "notes",
+    ],
+}
+
 
 def extract_text_from_odt(odt_path: Path) -> str:
-    """
-    Read visible text from an ODT file by extracting paragraphs from content.xml.
-    """
     try:
         with zipfile.ZipFile(odt_path, "r") as zf:
             content_xml = zf.read("content.xml")
 
         root = ET.fromstring(content_xml)
-
         namespaces = {
             "text": "urn:oasis:names:tc:opendocument:xmlns:text:1.0",
         }
 
         paragraphs: list[str] = []
         for node in root.findall(".//text:p", namespaces):
-            text = "".join(node.itertext()).strip()
-            if text:
-                paragraphs.append(text)
+            text_value = "".join(node.itertext()).strip()
+            if text_value:
+                paragraphs.append(text_value)
 
         return "\n".join(paragraphs).strip()
     except Exception as error:
-        raise RuntimeError(f"Failed to extract text from ODT '{odt_path.name}': {error}") from error
+        raise RuntimeError(
+            f"Failed to extract text from ODT '{odt_path.name}': {error}"
+        ) from error
 
 
 def get_latest_resume_file() -> Path:
-    """
-    Find the most recently modified resume file in templates/.
-    Prefers files named resume-file-* to match your upload flow.
-    """
     if not TEMPLATES_DIR.exists():
         raise FileNotFoundError("Templates directory does not exist.")
 
@@ -116,57 +161,95 @@ def get_resume_info() -> str:
     return resume_text
 
 
-def call_ollama(prompt: str) -> str:
+def call_openai_text(prompt: str) -> str:
     try:
-        response = requests.post(
-            f"{OLLAMA_BASE_URL}/api/generate",
-            json={
-                "model": OLLAMA_MODEL,
-                "prompt": prompt,
-                "stream": False,
-                "options": {
-                    "num_ctx": OLLAMA_NUM_CTX,
-                    "num_predict": OLLAMA_NUM_PREDICT,
-                    "temperature": OLLAMA_TEMPERATURE,
-                },
-            },
-            timeout=(10, 600),
+        response = openai_client.responses.create(
+            model=OPENAI_MODEL,
+            input=prompt,
         )
-        response.raise_for_status()
-        data = response.json()
 
-        content = (data.get("response") or "").strip()
+        content = response.output_text.strip()
         if not content:
-            raise RuntimeError("Ollama returned an empty response.")
+            raise RuntimeError("OpenAI returned an empty response.")
 
         return content
-    except requests.RequestException as error:
-        raise RuntimeError(f"Failed to reach Ollama: {error}") from error
+    except Exception as error:
+        raise RuntimeError(f"Failed to reach OpenAI: {error}") from error
 
 
-def extract_json_object(raw_text: str) -> dict:
-    """
-    Extract the first JSON object from a model response.
-    """
-    raw_text = raw_text.strip()
-
+def call_openai_json(prompt: str, schema: dict) -> dict:
     try:
-        return json.loads(raw_text)
-    except json.JSONDecodeError:
-        pass
+        response = openai_client.responses.create(
+            model=OPENAI_MODEL,
+            input=prompt,
+            text={
+                "format": {
+                    "type": "json_schema",
+                    "name": "tailored_profile_selection",
+                    "schema": schema,
+                    "strict": True,
+                }
+            },
+        )
 
-    start = raw_text.find("{")
-    end = raw_text.rfind("}")
+        content = response.output_text.strip()
+        if not content:
+            raise RuntimeError("OpenAI returned an empty structured response.")
 
-    if start == -1 or end == -1 or end <= start:
-        raise RuntimeError("Model did not return valid JSON.")
-
-    candidate = raw_text[start : end + 1]
-
-    try:
-        return json.loads(candidate)
+        return json.loads(content)
     except json.JSONDecodeError as error:
-        raise RuntimeError(f"Failed to parse model JSON: {error}") from error
+        raise RuntimeError(
+            f"Failed to parse OpenAI JSON response: {error}"
+        ) from error
+    except Exception as error:
+        raise RuntimeError(f"Failed to reach OpenAI: {error}") from error
+
+
+def clamp_selected_experiences(selected_experiences: list[dict]) -> list[dict]:
+    total_bullets = 0
+    clamped: list[dict] = []
+
+    for item in selected_experiences:
+        if "id" not in item:
+            continue
+
+        bullet_ids = item.get("selected_bullet_ids", [])
+        if total_bullets >= 6:
+            break
+
+        remaining = 6 - total_bullets
+        trimmed = bullet_ids[:remaining]
+
+        if not trimmed:
+            continue
+
+        clamped.append({
+            "id": item["id"],
+            "selected_bullet_ids": trimmed,
+        })
+        total_bullets += len(trimmed)
+
+    return clamped
+
+
+def clamp_selected_projects(selected_projects: list[dict]) -> list[dict]:
+    clamped: list[dict] = []
+
+    for item in selected_projects[:2]:
+        if "id" not in item:
+            continue
+
+        bullet_ids = item.get("selected_bullet_ids", [])[:3]
+
+        if not bullet_ids:
+            continue
+
+        clamped.append({
+            "id": item["id"],
+            "selected_bullet_ids": bullet_ids,
+        })
+
+    return clamped
 
 
 def get_full_profile_data(db: Session) -> dict:
@@ -286,7 +369,7 @@ Resume Information:
 {resume_info}
         """.strip()
 
-        cover_letter = call_ollama(prompt)
+        cover_letter = call_openai_text(prompt)
         return {"content": cover_letter}
 
     except HTTPException:
@@ -335,40 +418,33 @@ You are helping tailor a resume to a specific job posting.
 
 Your task:
 - Review the candidate profile and the target job posting.
-- Choose the skill groups, experiences, projects, and bullet points that are most relevant.
+- Choose the most relevant experience bullets and project bullets.
 - Decide whether the publication should be included.
 - If including the publication makes sense, it is acceptable to include fewer bullets elsewhere.
 - Prefer relevance and strength over quantity.
 - Do not invent any content.
 - Only select from the provided data.
-- Return JSON only. No markdown. No explanation.
+
+Hard constraints:
+- Do NOT choose skill groups. Skill groups will always be included separately.
+- Select experience bullets only from the provided experience bullet IDs.
+- Select project bullets only from the provided project bullet IDs.
+- Select at most 6 experience bullets TOTAL across all experiences.
+- Select at most 2 projects TOTAL.
+- Select exactly 2 projects if 2 relevant projects are available.
+- For this decision, treat infrastructure, deployment, databases, containerization, security, and backend application work as relevant for backend-leaning roles.
+- Only select 1 project if a second project would clearly weaken the resume.
+- Select at most 3 bullets per selected project.
+- If the publication is not clearly relevant, set include_publication to false.
+- Favor bullets that best match backend development, APIs, data/reporting, infrastructure, testing, debugging, deployment, documentation, and TypeScript/React when relevant to the posting.
 
 Selection guidance:
-- Keep the most relevant experiences and projects.
-- For each experience/project, choose only the strongest bullets.
-- Exclude weak or redundant bullets.
-- Include the publication only if it strengthens the application for this role.
-- Skills should be prioritized by relevance to the role.
-- Education should always remain included.
+- Prefer the strongest, most resume-worthy bullets.
+- Exclude weak, redundant, or less relevant bullets.
+- Keep only projects that strengthen the application for this job.
+- Education is always included separately.
 
-Return EXACTLY this JSON shape:
-{{
-  "include_publication": true,
-  "selected_skill_group_ids": [1, 2],
-  "selected_experiences": [
-    {{
-      "id": 10,
-      "selected_bullet_ids": [100, 101, 102]
-    }}
-  ],
-  "selected_projects": [
-    {{
-      "id": 20,
-      "selected_bullet_ids": [200, 201]
-    }}
-  ],
-  "notes": "Very short reason for publication choice."
-}}
+Return only valid JSON matching the required schema.
 
 Target Position:
 {payload.position}
@@ -383,10 +459,15 @@ Candidate Profile JSON:
 {json.dumps(profile, ensure_ascii=False)}
         """.strip()
 
-        ollama_response = call_ollama(prompt)
-        decision = extract_json_object(ollama_response)
+        decision = call_openai_json(prompt, TAILOR_PROFILE_SCHEMA)
 
-        selected_skill_group_ids = set(decision.get("selected_skill_group_ids", []))
+        decision["selected_experiences"] = clamp_selected_experiences(
+            decision.get("selected_experiences", [])
+        )
+        decision["selected_projects"] = clamp_selected_projects(
+            decision.get("selected_projects", [])
+        )
+
         include_publication = bool(decision.get("include_publication", False))
 
         selected_experience_map = {
@@ -400,12 +481,6 @@ Candidate Profile JSON:
             for item in decision.get("selected_projects", [])
             if "id" in item
         }
-
-        tailored_skill_groups = []
-        for group in profile["skill_groups"]:
-            if selected_skill_group_ids and group["id"] not in selected_skill_group_ids:
-                continue
-            tailored_skill_groups.append(group)
 
         tailored_experiences = []
         for exp in profile["experiences"]:
@@ -448,7 +523,7 @@ Candidate Profile JSON:
         return {
             "education": EDUCATION,
             "publications": PUBLICATIONS if include_publication else [],
-            "skill_groups": tailored_skill_groups,
+            "skill_groups": profile["skill_groups"],
             "experiences": tailored_experiences,
             "projects": tailored_projects,
             "meta": {
@@ -456,8 +531,7 @@ Candidate Profile JSON:
                 "company": payload.company,
                 "include_publication": include_publication,
                 "notes": decision.get("notes", ""),
-                "model": OLLAMA_MODEL,
-                "raw_ollama_response": ollama_response,
+                "model": OPENAI_MODEL,
             },
         }
 
