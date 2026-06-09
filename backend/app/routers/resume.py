@@ -58,7 +58,7 @@ EDUCATION = [
     {
         "degree": "Bachelor of Science in Software Engineering",
         "institution": "Schulich School of Engineering, University of Calgary | Calgary, Alberta",
-        "date": "Expected to graduate in April 2026.",
+        "date": "Graduated May 2026.",
     }
 ]
 
