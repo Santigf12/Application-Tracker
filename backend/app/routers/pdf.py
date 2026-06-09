@@ -9,7 +9,7 @@ from fastapi.responses import FileResponse, Response
 from pypdf import PdfWriter
 
 from app.helpers.file_converter import convert_file
-from app.helpers.template_gen import generate_cover_letter_odt
+from app.helpers.cover_letter_builder import generate_cover_letter_docx
 from app.schemas.pdf import CoverLetterFileRequest, MergeFilesRequest
 
 router = APIRouter()
@@ -41,21 +41,26 @@ def cleanup_files(*file_paths: str) -> None:
 @router.post("/file-cover-letter")
 def create_cover_letter(payload: CoverLetterFileRequest):
     try:
-        odt_buffer = generate_cover_letter_odt(
-            payload.email,
-            payload.company,
-            payload.content,
+        docx_buffer = generate_cover_letter_docx(
+            email=payload.email,
+            company=payload.company,
+            content=payload.content,
+            position=getattr(payload, "position", None),
         )
 
         return Response(
-            content=odt_buffer,
-            media_type="application/vnd.oasis.opendocument.text",
+            content=docx_buffer,
+            media_type=(
+                "application/vnd.openxmlformats-officedocument."
+                "wordprocessingml.document"
+            ),
             headers={
-                "Content-Disposition": 'attachment; filename="Cover Letter.odt"'
+                "Content-Disposition": 'attachment; filename="Cover Letter.docx"'
             },
         )
+
     except Exception as error:
-        print("Error generating cover letter ODT:", error)
+        print("Error generating cover letter DOCX:", error)
         raise HTTPException(status_code=500, detail=str(error))
 
 @router.post("/upload-resume")
@@ -266,7 +271,7 @@ def get_merge_files(
 ):
     tmp_resume_odt_path = None
     resume_pdf_path = None
-    cover_letter_odt_path = None
+    cover_letter_docx_path = None
     cover_letter_pdf_path = None
     merged_pdf_path = None
 
@@ -319,15 +324,20 @@ def get_merge_files(
                     detail="Missing required fields for cover letter generation",
                 )
 
-            odt_buffer = generate_cover_letter_odt(email, company, content)
-
-            cover_letter_odt_path = str(
-                TMP_DIR / f"cover-letter-{int(time.time() * 1000)}.odt"
+            docx_buffer = generate_cover_letter_docx(
+                email=email,
+                company=company,
+                content=content,
             )
-            with open(cover_letter_odt_path, "wb") as f:
-                f.write(odt_buffer)
 
-            cover_letter_pdf_path = convert_file(cover_letter_odt_path)
+            cover_letter_docx_path = str(
+                TMP_DIR / f"cover-letter-{int(time.time() * 1000)}.docx"
+            )
+
+            with open(cover_letter_docx_path, "wb") as f:
+                f.write(docx_buffer)
+
+            cover_letter_pdf_path = convert_file(cover_letter_docx_path)
             merger.append(cover_letter_pdf_path)
 
         if transcript_file:
@@ -342,7 +352,7 @@ def get_merge_files(
             cleanup_files,
             str(tmp_resume_odt_path) if tmp_resume_odt_path else None,
             resume_pdf_path,
-            cover_letter_odt_path,
+            cover_letter_docx_path,
             cover_letter_pdf_path,
             merged_pdf_path,
         )
