@@ -3,9 +3,45 @@
 import { useCreateApplication } from '@/lib/features/applications/hooks';
 import type { Application } from '@/lib/features/applications/types';
 import { useScrapePosting } from '@/lib/features/tools/hooks';
-import { ProForm, ProFormSelect, ProFormText, ProFormTextArea } from '@ant-design/pro-components';
+import {
+  ProForm,
+  ProFormSelect,
+  ProFormText,
+  ProFormTextArea,
+} from '@ant-design/pro-components';
 import { App, Card, Space } from 'antd';
 import { useRouter } from 'next/navigation';
+import { useMemo, useState } from 'react';
+
+const CANADIAN_LOCATIONS = [
+  { label: 'Calgary, AB', value: 'Calgary, AB' },
+  { label: 'Edmonton, AB', value: 'Edmonton, AB' },
+  { label: 'Red Deer, AB', value: 'Red Deer, AB' },
+  { label: 'Lethbridge, AB', value: 'Lethbridge, AB' },
+  { label: 'Medicine Hat, AB', value: 'Medicine Hat, AB' },
+
+  { label: 'Vancouver, BC', value: 'Vancouver, BC' },
+  { label: 'Victoria, BC', value: 'Victoria, BC' },
+  { label: 'Burnaby, BC', value: 'Burnaby, BC' },
+  { label: 'Surrey, BC', value: 'Surrey, BC' },
+  { label: 'Kelowna, BC', value: 'Kelowna, BC' },
+
+  { label: 'Toronto, ON', value: 'Toronto, ON' },
+  { label: 'Ottawa, ON', value: 'Ottawa, ON' },
+  { label: 'Waterloo, ON', value: 'Waterloo, ON' },
+  { label: 'Kitchener, ON', value: 'Kitchener, ON' },
+  { label: 'Mississauga, ON', value: 'Mississauga, ON' },
+  { label: 'Hamilton, ON', value: 'Hamilton, ON' },
+
+  { label: 'Montréal, QC', value: 'Montréal, QC' },
+  { label: 'Québec City, QC', value: 'Québec City, QC' },
+
+  { label: 'Winnipeg, MB', value: 'Winnipeg, MB' },
+  { label: 'Regina, SK', value: 'Regina, SK' },
+  { label: 'Saskatoon, SK', value: 'Saskatoon, SK' },
+  { label: 'Halifax, NS', value: 'Halifax, NS' },
+  { label: 'Remote', value: 'Remote' },
+];
 
 export default function CreatePageClient() {
   const router = useRouter();
@@ -14,8 +50,31 @@ export default function CreatePageClient() {
   const [autoFillForm] = ProForm.useForm();
   const [applicationForm] = ProForm.useForm();
 
+  const [locationSearch, setLocationSearch] = useState('');
+
   const createApplicationMutation = useCreateApplication();
   const scrapePostingMutation = useScrapePosting();
+
+  const locationOptions = useMemo(() => {
+    const trimmed = locationSearch.trim();
+
+    if (
+      !trimmed ||
+      CANADIAN_LOCATIONS.some(
+        (location) => location.value.toLowerCase() === trimmed.toLowerCase()
+      )
+    ) {
+      return CANADIAN_LOCATIONS;
+    }
+
+    return [
+      ...CANADIAN_LOCATIONS,
+      {
+        label: trimmed,
+        value: trimmed,
+      },
+    ];
+  }, [locationSearch]);
 
   const onSubmit = async (values: Application) => {
     try {
@@ -43,6 +102,7 @@ export default function CreatePageClient() {
     } finally {
       applicationForm.resetFields();
       autoFillForm.resetFields();
+      setLocationSearch('');
     }
   };
 
@@ -58,6 +118,10 @@ export default function CreatePageClient() {
         length: result.length || '',
         posting: result.posting || '',
       });
+
+      if (result.location) {
+        setLocationSearch(result.location);
+      }
 
       notification.success({
         title: 'Success',
@@ -120,7 +184,7 @@ export default function CreatePageClient() {
           <div style={{ width: '100%', height: 1, backgroundColor: '#d9d9d9' }} />
 
           <ProForm
-            layout="vertical"
+            layout="horizontal"
             form={applicationForm}
             submitter={{ resetButtonProps: false }}
             grid
@@ -135,14 +199,23 @@ export default function CreatePageClient() {
               label="Title"
               placeholder="Job title"
               allowClear
+              fieldProps={{
+                spellCheck: true,
+                lang: 'en-CA',
+              }}
               rules={[{ required: true, message: 'Title is required' }]}
               colProps={{ xs: 24, sm: 24, md: 12, lg: 12, xl: 12 }}
             />
+
             <ProFormText
               name="company"
               label="Company"
               placeholder="Company name"
               allowClear
+              fieldProps={{
+                spellCheck: true,
+                lang: 'en-CA',
+              }}
               rules={[{ required: true, message: 'Company is required' }]}
               colProps={{ xs: 24, sm: 24, md: 12, lg: 12, xl: 12 }}
             />
@@ -152,27 +225,59 @@ export default function CreatePageClient() {
               label="Posting URL"
               placeholder="Job posting URL"
               allowClear
+              fieldProps={{
+                spellCheck: false,
+              }}
               colProps={{ xs: 24 }}
             />
 
-            <ProFormText
+            <ProFormSelect
               name="location"
               label="Location"
-              placeholder="Location"
+              placeholder="Search or type location"
               allowClear
+              options={locationOptions}
+              fieldProps={{
+                spellCheck: true,
+                lang: 'en-CA',
+                showSearch: {
+                  filterOption: (inputValue, option) =>
+                    String(option?.value ?? '')
+                      .toLowerCase()
+                      .includes(inputValue.toLowerCase()) ||
+                    String(option?.label ?? '')
+                      .toLowerCase()
+                      .includes(inputValue.toLowerCase()),
+                },
+                onSearch: (value) => {
+                  setLocationSearch(value);
+                },
+                onSelect: (value) => {
+                  applicationForm.setFieldValue('location', String(value));
+                  setLocationSearch(String(value));
+                },
+                onBlur: () => {
+                  const trimmed = locationSearch.trim();
+
+                  if (trimmed) {
+                    applicationForm.setFieldValue('location', trimmed);
+                  }
+                },
+              }}
               rules={[{ required: true, message: 'Location is required' }]}
               colProps={{ xs: 24, sm: 24, md: 12, lg: 12, xl: 12 }}
             />
+
             <ProFormSelect
               name="length"
               label="Length"
               placeholder="Length"
               allowClear
               options={[
-                { key: '4 Months', text: '4 Months', value: '4 Months' },
-                { key: '8 Months', text: '8 Months', value: '8 Months' },
-                { key: '12 Months', text: '12 Months', value: '12 Months' },
-                { key: '16 Months', text: '16 Months', value: '16 Months' },
+                { label: '4 Months', value: '4 Months' },
+                { label: '8 Months', value: '8 Months' },
+                { label: '12 Months', value: '12 Months' },
+                { label: '16 Months', value: '16 Months' },
               ]}
               colProps={{ xs: 24, sm: 24, md: 12, lg: 12, xl: 12 }}
             />
@@ -182,7 +287,11 @@ export default function CreatePageClient() {
               label="Posting"
               placeholder="Description"
               allowClear
-              fieldProps={{ autoSize: { minRows: 9, maxRows: 10 } }}
+              fieldProps={{
+                autoSize: { minRows: 9, maxRows: 10 },
+                spellCheck: true,
+                lang: 'en-CA',
+              }}
               colProps={{ xs: 24 }}
             />
           </ProForm>
