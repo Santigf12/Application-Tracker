@@ -10,7 +10,7 @@ import type { Application } from '@/lib/features/applications/types';
 import { useMergeFile } from '@/lib/features/files/hooks';
 import { ProDescriptions } from '@ant-design/pro-components';
 import { App, Button, Form, Popconfirm } from 'antd';
-import { DateTime } from 'luxon';
+import dayjs from 'dayjs';
 import { useParams, useRouter } from 'next/navigation';
 
 export default function ApplicationTabPage() {
@@ -21,6 +21,7 @@ export default function ApplicationTabPage() {
   const id = params?.id ?? '';
 
   const { data: application, isLoading: isLoadingApplication } = useApplication(id, !!id);
+  console.log(application)
   const { data: coverletter = '' } = useCoverLetter(id, !!id);
 
   const { message, notification } = App.useApp();
@@ -29,12 +30,33 @@ export default function ApplicationTabPage() {
   const deleteMutation = useDeleteApplication();
   const mergeFileMutation = useMergeFile();
 
-  const handleSave = async (_: unknown, record: Application & { index?: number }) => {
-    const now = DateTime.now().toFormat('yyyy-MM-dd HH:mm:ss');
+  const DATE_FORMAT = 'YYYY-MM-DD HH:mm:ss';
 
+  const normalizeDate = (value: unknown): string | undefined => {
+    if (!value) return undefined;
+
+    if (dayjs.isDayjs(value)) {
+      return value.format(DATE_FORMAT);
+    }
+
+    if (value instanceof Date) {
+      return dayjs(value).format(DATE_FORMAT);
+    }
+
+    const str = String(value).trim();
+
+    if (dayjs(str).isValid()) {
+      return dayjs(str).format(DATE_FORMAT);
+    }
+
+    return str;
+  };
+
+  const handleSave = async (_: unknown, record: Application & { index?: number }) => {
     const updatedRecord: Application = {
       ...record,
-      applied: record.status === 'Applied' ? now : record.applied,
+      added: normalizeDate(record.added) ?? record.added,
+      applied: normalizeDate(record.applied) ?? record.applied,
     };
 
     try {
@@ -45,6 +67,26 @@ export default function ApplicationTabPage() {
       message.success('Changes saved', 1.5);
     } catch (error) {
       message.error('Failed to save changes', 1.5);
+    }
+  };
+
+  const handleQuickApply = async () => {
+    const now = dayjs().format(DATE_FORMAT);
+
+    const updatedRecord: Application = {
+      ...currentApplication,
+      status: 'Applied',
+      applied: now,
+    };
+
+    try {
+      await updateMutation.mutateAsync({
+        id,
+        application: updatedRecord,
+      });
+      message.success('Marked as applied', 1.5);
+    } catch (error) {
+      message.error('Failed to mark as applied', 1.5);
     }
   };
 
@@ -122,7 +164,6 @@ export default function ApplicationTabPage() {
       extra={
         <>
           <Button
-            
             color="blue"
             variant="solid"
             loading={mergeFileMutation.isPending}
@@ -136,6 +177,15 @@ export default function ApplicationTabPage() {
             }
           >
             Download Application
+          </Button>
+
+          <Button
+            color="green"
+            variant="solid"
+            loading={updateMutation.isPending}
+            onClick={handleQuickApply}
+          >
+            Quick Apply
           </Button>
 
           <Popconfirm

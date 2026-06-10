@@ -4,23 +4,25 @@ import { useApplications, useUpdateApplication } from '@/lib/features/applicatio
 import type { Application } from '@/lib/features/applications/types';
 import { LightFilter } from '@ant-design/pro-components';
 import {
-    Badge,
-    Button,
-    Card,
-    Col,
-    DatePicker,
-    Radio,
-    Row,
-    Space,
-    Tag,
-    Tooltip,
-    Typography,
+  Badge,
+  Button,
+  Card,
+  Col,
+  DatePicker,
+  Radio,
+  Row,
+  Space,
+  Tag,
+  Tooltip,
+  Typography,
 } from 'antd';
 import type { SortOrder } from 'antd/es/table/interface';
-import { DateTime } from 'luxon';
+import dayjs from 'dayjs';
 import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { type Key, useCallback, useMemo, useState } from 'react';
+
+const DATE_FORMAT = 'YYYY-MM-DD HH:mm:ss';
 
 const provinceMap: Record<string, string> = {
   AB: 'Alberta',
@@ -43,6 +45,31 @@ const ProTable = dynamic(
   () => import('@ant-design/pro-components').then((mod) => mod.ProTable),
   { ssr: false },
 ) as typeof import('@ant-design/pro-components').ProTable;
+
+const parseBackendDate = (value: string | null | undefined) => {
+  if (!value) return null;
+
+  const match = value.match(
+    /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/,
+  );
+
+  if (!match) return null;
+
+  const [, year, month, day, hour, minute, second] = match;
+
+  const parsed = dayjs(
+    new Date(
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      Number(hour),
+      Number(minute),
+      Number(second),
+    ),
+  );
+
+  return parsed.isValid() ? parsed : null;
+};
 
 export default function PageClient() {
   const router = useRouter();
@@ -68,11 +95,10 @@ export default function PageClient() {
     router.push(`/?${params.toString()}`);
   };
 
-  const formatDates = (date: string) => {
-    if (!date) return '';
-    return DateTime.fromFormat(date, 'yyyy-MM-dd HH:mm:ss').toLocaleString(
-      DateTime.DATE_FULL,
-    );
+  const formatDates = (date: string | null) => {
+    const parsed = parseBackendDate(date);
+
+    return parsed ? parsed.format('MMMM D, YYYY') : '';
   };
 
   const filteredApplications = useMemo(() => {
@@ -95,10 +121,18 @@ export default function PageClient() {
     }
 
     if (appliedDateRange[0] && appliedDateRange[1]) {
-      const [start, end] = appliedDateRange.map((date) => DateTime.fromISO(date!));
+      const start = dayjs(appliedDateRange[0]).startOf('day');
+      const end = dayjs(appliedDateRange[1]).endOf('day');
+
       filteredApps = filteredApps.filter((app) => {
-        const appliedDate = DateTime.fromFormat(app.applied, 'yyyy-MM-dd HH:mm:ss');
-        return appliedDate >= start && appliedDate <= end;
+        const appliedDate = parseBackendDate(app.applied);
+
+        if (!appliedDate) return false;
+
+        return (
+          appliedDate.valueOf() >= start.valueOf() &&
+          appliedDate.valueOf() <= end.valueOf()
+        );
       });
     }
 
@@ -119,14 +153,15 @@ export default function PageClient() {
   };
 
   const calculateDaysSinceApplied = (appliedDateStr: string | null): string => {
-    if (!appliedDateStr) return 'Not Applied';
+    const appliedDate = parseBackendDate(appliedDateStr);
 
-    const appliedDate = DateTime.fromFormat(appliedDateStr, 'yyyy-MM-dd HH:mm:ss');
-    const currentDate = DateTime.now();
-    const diff = Math.round(currentDate.diff(appliedDate, 'days').days);
+    if (!appliedDate) return 'Not Applied';
+
+    const diff = dayjs().startOf('day').diff(appliedDate.startOf('day'), 'day');
 
     if (diff === 1) return `${diff} day ago`;
     if (diff > 1) return `${diff} days ago`;
+
     return 'Today';
   };
 
@@ -205,7 +240,16 @@ export default function PageClient() {
       dataIndex: 'added',
       key: 'added',
       search: false,
-      sorter: (a: { added: string }, b: { added: string }) => a.added.localeCompare(b.added),
+      sorter: (a: { added: string }, b: { added: string }) => {
+        const dateA = parseBackendDate(a.added);
+        const dateB = parseBackendDate(b.added);
+
+        if (!dateA && !dateB) return 0;
+        if (!dateA) return 1;
+        if (!dateB) return -1;
+
+        return dateA.valueOf() - dateB.valueOf();
+      },
       render: (_: unknown, record: { added: string }) => (
         <Typography.Text>{formatDates(record.added)}</Typography.Text>
       ),
@@ -216,10 +260,14 @@ export default function PageClient() {
       key: 'applied',
       search: false,
       sorter: (a: { applied: string | null }, b: { applied: string | null }) => {
-        if (!a.applied && !b.applied) return 0;
-        if (!a.applied) return 1;
-        if (!b.applied) return -1;
-        return a.applied.localeCompare(b.applied);
+        const dateA = parseBackendDate(a.applied);
+        const dateB = parseBackendDate(b.applied);
+
+        if (!dateA && !dateB) return 0;
+        if (!dateA) return 1;
+        if (!dateB) return -1;
+
+        return dateA.valueOf() - dateB.valueOf();
       },
       render: (_: unknown, record: { applied: string | null }) => (
         <Typography.Text>
@@ -243,6 +291,7 @@ export default function PageClient() {
           Interview: 'orange',
           Offer: 'green',
         };
+
         return (
           <Tag
             color={colorMap[record.status] || 'default'}
@@ -257,13 +306,19 @@ export default function PageClient() {
       title: 'Application Age',
       key: 'daysSinceApplied',
       search: false,
-      render: (_: unknown, record: { applied: string }) => (
+      render: (_: unknown, record: { applied: string | null }) => (
         <Typography.Text>{calculateDaysSinceApplied(record.applied)}</Typography.Text>
       ),
-      sorter: (a: { applied: string }, b: { applied: string }) =>
-        DateTime.fromFormat(a.applied, 'yyyy-MM-dd HH:mm:ss')
-          .diff(DateTime.fromFormat(b.applied, 'yyyy-MM-dd HH:mm:ss'))
-          .as('days'),
+      sorter: (a: { applied: string | null }, b: { applied: string | null }) => {
+        const dateA = parseBackendDate(a.applied);
+        const dateB = parseBackendDate(b.applied);
+
+        if (!dateA && !dateB) return 0;
+        if (!dateA) return 1;
+        if (!dateB) return -1;
+
+        return dateA.valueOf() - dateB.valueOf();
+      },
     },
   ];
 
@@ -303,6 +358,7 @@ export default function PageClient() {
                   >
                     Set Status
                   </Button>
+
                   <Radio.Group
                     options={[
                       { label: 'Applied', value: 'Applied' },
@@ -352,11 +408,12 @@ export default function PageClient() {
                     variant="outlined"
                     style={{ width: '100%' }}
                     onChange={(_, dateStrings) => {
-                      if (dateStrings[0] && dateStrings[1]) {
-                        setAppliedDateRange(dateStrings as [string, string]);
-                      } else {
+                      if (!dateStrings || !dateStrings[0] || !dateStrings[1]) {
                         setAppliedDateRange([null, null]);
+                        return;
                       }
+
+                      setAppliedDateRange(dateStrings as [string, string]);
                     }}
                   />
                 </LightFilter>
