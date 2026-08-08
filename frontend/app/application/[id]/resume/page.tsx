@@ -132,9 +132,7 @@ const bulletColumns: TableColumnsType<BulletRow> = [
   },
 ];
 
-const mapTailoredProfileToExperienceSections = (
-  tailoredProfile: TailoredProfileResponse,
-): ExperienceSection[] =>
+const mapTailoredProfileToExperienceSections = (tailoredProfile: TailoredProfileResponse, ): ExperienceSection[] =>
   tailoredProfile.experiences.map((experience) => ({
     id: experience.id ?? '',
     title: experience.title,

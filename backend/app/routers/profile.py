@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+import uuid
 
 from app.core.db import get_db
 from app.schemas.profile import (
@@ -318,59 +319,28 @@ def get_experience_by_id(id: str, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @router.post("/experiences")
 def create_experience(payload: ExperienceCreate, db: Session = Depends(get_db)):
     try:
+        created_id = str(uuid.uuid4())
+
         insert_experience = text("""
             INSERT INTO experiences (
-                title,
-                company,
-                location,
-                start_date,
-                end_date,
-                description,
-                position
+                id, title, company, location, start_date, end_date, description, position
             )
             VALUES (
-                :title,
-                :company,
-                :location,
-                :start_date,
-                :end_date,
-                :description,
-                :position
+                :id, :title, :company, :location, :start_date, :end_date, :description, :position
             );
         """)
 
         db.execute(insert_experience, {
+            "id": created_id,
             "title": payload.title,
             "company": payload.company,
             "location": payload.location,
             "start_date": payload.start_date,
             "end_date": payload.end_date,
             "description": payload.description,
-            "position": payload.position,
-        })
-
-        exp_id_result = db.execute(text("SELECT UUID() AS id;")).fetchone()
-        created_id = exp_id_result._mapping["id"]
-
-        # Better option if you generate UUID in Python instead of SQL.
-        # See note below.
-
-        db.execute(text("""
-            UPDATE experiences
-            SET id = :id
-            WHERE title = :title
-              AND company = :company
-              AND position = :position
-            ORDER BY position
-            LIMIT 1;
-        """), {
-            "id": created_id,
-            "title": payload.title,
-            "company": payload.company,
             "position": payload.position,
         })
 
@@ -395,44 +365,48 @@ def create_experience(payload: ExperienceCreate, db: Session = Depends(get_db)):
 @router.put("/experiences/{id}")
 def update_experience(id: str, payload: ExperienceUpdate, db: Session = Depends(get_db)):
     try:
-        update_query = text("""
+        db.execute(text("""
             UPDATE experiences
-            SET
-                title = :title,
-                company = :company,
-                location = :location,
-                start_date = :start_date,
-                end_date = :end_date,
-                description = :description,
-                position = :position
+            SET title = :title, company = :company, location = :location,
+                start_date = :start_date, end_date = :end_date,
+                description = :description, position = :position
             WHERE id = :id;
-        """)
+        """), {"id": id, "title": payload.title, "company": payload.company,
+               "location": payload.location, "start_date": payload.start_date,
+               "end_date": payload.end_date, "description": payload.description,
+               "position": payload.position})
 
-        db.execute(update_query, {
-            "id": id,
-            "title": payload.title,
-            "company": payload.company,
-            "location": payload.location,
-            "start_date": payload.start_date,
-            "end_date": payload.end_date,
-            "description": payload.description,
-            "position": payload.position,
-        })
+        incoming_ids = {b.id for b in (payload.bullets or []) if getattr(b, "id", None)}
 
-        db.execute(text("DELETE FROM exp_bullets WHERE experience_id = :experience_id;"), {
-            "experience_id": id
-        })
+        # Delete only bullets that were actually removed
+        existing_ids = {
+            row._mapping["id"]
+            for row in db.execute(
+                text("SELECT id FROM exp_bullets WHERE experience_id = :eid"),
+                {"eid": id},
+            )
+        }
+        to_delete = existing_ids - incoming_ids
+        if to_delete:
+            db.execute(
+                text("DELETE FROM exp_bullets WHERE id IN :ids").bindparams(
+                    ids=tuple(to_delete)
+                ),
+                {},
+            )
 
         for bullet in payload.bullets or []:
-            insert_bullet = text("""
-                INSERT INTO exp_bullets (experience_id, content, position)
-                VALUES (:experience_id, :content, :position);
-            """)
-            db.execute(insert_bullet, {
-                "experience_id": id,
-                "content": bullet.content,
-                "position": bullet.position,
-            })
+            if getattr(bullet, "id", None) and bullet.id in existing_ids:
+                db.execute(text("""
+                    UPDATE exp_bullets
+                    SET content = :content, position = :position
+                    WHERE id = :id;
+                """), {"id": bullet.id, "content": bullet.content, "position": bullet.position})
+            else:
+                db.execute(text("""
+                    INSERT INTO exp_bullets (experience_id, content, position)
+                    VALUES (:experience_id, :content, :position);
+                """), {"experience_id": id, "content": bullet.content, "position": bullet.position})
 
         db.commit()
         return {"success": True, "message": "Experience updated"}
@@ -531,12 +505,14 @@ def get_project_by_id(id: str, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @router.post("/projects")
 def create_project(payload: ProjectCreate, db: Session = Depends(get_db)):
     try:
+        created_id = str(uuid.uuid4())
+
         insert_project = text("""
             INSERT INTO projects (
+                id,
                 name,
                 start_date,
                 end_date,
@@ -546,6 +522,7 @@ def create_project(payload: ProjectCreate, db: Session = Depends(get_db)):
                 position
             )
             VALUES (
+                :id,
                 :name,
                 :start_date,
                 :end_date,
@@ -557,28 +534,13 @@ def create_project(payload: ProjectCreate, db: Session = Depends(get_db)):
         """)
 
         db.execute(insert_project, {
+            "id": created_id,
             "name": payload.name,
             "start_date": payload.start_date,
             "end_date": payload.end_date,
             "stack": payload.stack,
             "links": payload.links,
             "description": payload.description,
-            "position": payload.position,
-        })
-
-        project_id_result = db.execute(text("SELECT UUID() AS id;")).fetchone()
-        created_id = project_id_result._mapping["id"]
-
-        db.execute(text("""
-            UPDATE projects
-            SET id = :id
-            WHERE name = :name
-              AND position = :position
-            ORDER BY position
-            LIMIT 1;
-        """), {
-            "id": created_id,
-            "name": payload.name,
             "position": payload.position,
         })
 
@@ -627,27 +589,43 @@ def update_project(id: str, payload: ProjectUpdate, db: Session = Depends(get_db
             "position": payload.position,
         })
 
-        db.execute(text("DELETE FROM proj_bullets WHERE project_id = :project_id;"), {
-            "project_id": id
-        })
+        incoming_ids = {b.id for b in (payload.bullets or []) if getattr(b, "id", None)}
+
+        # Only delete bullets that were actually removed
+        existing_ids = {
+            row._mapping["id"]
+            for row in db.execute(
+                text("SELECT id FROM proj_bullets WHERE project_id = :pid"),
+                {"pid": id},
+            )
+        }
+        to_delete = existing_ids - incoming_ids
+        if to_delete:
+            db.execute(
+                text("DELETE FROM proj_bullets WHERE id IN :ids").bindparams(
+                    ids=tuple(to_delete)
+                ),
+                {},
+            )
 
         for bullet in payload.bullets or []:
-            insert_bullet = text("""
-                INSERT INTO proj_bullets (project_id, content, position)
-                VALUES (:project_id, :content, :position);
-            """)
-            db.execute(insert_bullet, {
-                "project_id": id,
-                "content": bullet.content,
-                "position": bullet.position,
-            })
+            if getattr(bullet, "id", None) and bullet.id in existing_ids:
+                db.execute(text("""
+                    UPDATE proj_bullets
+                    SET content = :content, position = :position
+                    WHERE id = :id;
+                """), {"id": bullet.id, "content": bullet.content, "position": bullet.position})
+            else:
+                db.execute(text("""
+                    INSERT INTO proj_bullets (project_id, content, position)
+                    VALUES (:project_id, :content, :position);
+                """), {"project_id": id, "content": bullet.content, "position": bullet.position})
 
         db.commit()
         return {"success": True, "message": "Project updated"}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @router.delete("/projects/{id}")
 def delete_project(id: str, db: Session = Depends(get_db)):

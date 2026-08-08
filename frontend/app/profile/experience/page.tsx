@@ -34,8 +34,7 @@ type ExperienceRow = {
   isNew?: boolean;
 };
 
-const makeTempId = () =>
-  `tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+const makeTempId = () => `tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 const toRow = (experience: Experience): ExperienceRow => ({
   id: experience.id ?? makeTempId(),

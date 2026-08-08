@@ -1,11 +1,6 @@
 'use client';
 
-import {
-  useApplication,
-  useCoverLetter,
-  useDeleteApplication,
-  useUpdateApplication,
-} from '@/lib/features/applications/hooks';
+import { useApplication, useCoverLetter, useDeleteApplication, useUpdateApplication, } from '@/lib/features/applications/hooks';
 import type { Application } from '@/lib/features/applications/types';
 import { useMergeFile } from '@/lib/features/files/hooks';
 import { ProDescriptions } from '@ant-design/pro-components';
@@ -21,7 +16,6 @@ export default function ApplicationTabPage() {
   const id = params?.id ?? '';
 
   const { data: application, isLoading: isLoadingApplication } = useApplication(id, !!id);
-  console.log(application)
   const { data: coverletter = '' } = useCoverLetter(id, !!id);
 
   const { message, notification } = App.useApp();
@@ -107,12 +101,7 @@ export default function ApplicationTabPage() {
     }
   };
 
-  const handleMergeDownload = async (
-    hasCoverLetter: boolean,
-    email?: string,
-    company?: string,
-    content?: string,
-  ) => {
+  const handleMergeDownload = async ( hasCoverLetter: boolean, email?: string, company?: string, content?: string, ) => {
     try {
       const response = await mergeFileMutation.mutateAsync({
         coverletter: hasCoverLetter,

@@ -26,17 +26,14 @@ def save_upload_file(upload_file: UploadFile, destination: Path) -> None:
     with destination.open("wb") as buffer:
         shutil.copyfileobj(upload_file.file, buffer)
 
-def cleanup_files(*file_paths: str) -> None:
+def cleanup_files(*file_paths: str | None) -> None:
     for file_path in file_paths:
         if not file_path:
             continue
         try:
-            path = Path(file_path)
-            if path.exists():
-                path.unlink()
+            Path(file_path).unlink(missing_ok=True)
         except Exception as error:
             print(f"Cleanup failed for {file_path}: {error}")
-
 
 @router.post("/file-cover-letter")
 def create_cover_letter(payload: CoverLetterFileRequest):
@@ -64,10 +61,7 @@ def create_cover_letter(payload: CoverLetterFileRequest):
         raise HTTPException(status_code=500, detail=str(error))
 
 @router.post("/upload-resume")
-def upload_resume(
-    resume_file: UploadFile = File(..., alias="resume-file"),
-    id: str = Query(...),
-):
+def upload_resume( resume_file: UploadFile = File(..., alias="resume-file"), id: str = Query(...), ):
     try:
         if not id:
             raise HTTPException(
@@ -75,8 +69,8 @@ def upload_resume(
                 detail="Missing file ID in query parameters",
             )
 
-        ext = Path(resume_file.filename).suffix
         original_name = resume_file.filename or "resume-file"
+        ext = Path(original_name).suffix
 
         if "Resume" in original_name:
             final_name = f"resume-file-{id}{ext}"

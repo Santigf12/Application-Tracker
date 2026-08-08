@@ -13,13 +13,16 @@ import os
 import subprocess
 import tempfile
 from io import BytesIO
+from typing import cast
+
 
 from docx import Document
+from docx.document import Document as DocxDocument
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Inches, Pt, RGBColor
-
+from docx.styles.style import _ParagraphStyle
 
 # ── Colours from ODT ──────────────────────────────────────────────────────────
 COLOUR_NAME = RGBColor(0x00, 0x00, 0x00)      # black
@@ -111,7 +114,7 @@ def _hyperlink(paragraph, text: str, url: str, colour=COLOUR_LINK):
 # Document setup
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _setup_document() -> Document:
+def _setup_document() -> DocxDocument:
     doc = Document()
 
     sec = doc.sections[0]
@@ -122,7 +125,7 @@ def _setup_document() -> Document:
     sec.left_margin = MARGIN_LR
     sec.right_margin = MARGIN_LR
 
-    style = doc.styles["Normal"]
+    style = cast(_ParagraphStyle, doc.styles["Normal"])
     style.font.name = "Times New Roman"
     style.font.size = Pt(11)
     style.font.color.rgb = COLOUR_BODY
