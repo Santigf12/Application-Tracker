@@ -15,11 +15,6 @@ export interface UploadOtherFilePayload {
   onUploadProgress?: (progress: number) => void;
 }
 
-export interface UploadCoverLetterTemplatePayload {
-  file: File;
-  onUploadProgress?: (progress: number) => void;
-}
-
 export interface CoverLetterFilePayload {
   id: string;
   email: string;

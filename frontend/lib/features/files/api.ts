@@ -1,5 +1,5 @@
 import { api } from "@/lib/api";
-import type { CoverLetterFilePayload, FileItem, MergeFilePayload, UploadCoverLetterTemplatePayload, UploadOtherFilePayload } from "./types";
+import type { CoverLetterFilePayload, FileItem, MergeFilePayload, UploadOtherFilePayload } from "./types";
 
 const FILES_PATH = "/pdf";
 
@@ -13,29 +13,8 @@ const fetchCoverLetterFile = async ({ id, email, company, content }: CoverLetter
   return data;
 };
 
-const uploadCoverLetterTemplate = async ({ file, onUploadProgress }: UploadCoverLetterTemplatePayload): Promise<FileItem> => {
-  const formData = new FormData();
-  formData.append("cover-letter-template", file);
-
-  const { data } = await api.post(`${FILES_PATH}/upload-cover-letter-template`, formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-    onUploadProgress: (progressEvent) => {
-      onUploadProgress?.(toProgressPercent(progressEvent.loaded, progressEvent.total));
-    },
-  });
-
-  return data;
-};
-
 const deleteFile = async (id: string): Promise<{ message: string; id: string }> => {
   const { data } = await api.delete(`${FILES_PATH}/delete-file?id=${encodeURIComponent(id)}`);
-  return data;
-};
-
-const getCoverLetterTemplate = async (): Promise<FileItem[]> => {
-  const { data } = await api.get(`${FILES_PATH}/cover-letter-template`);
   return data;
 };
 
@@ -65,4 +44,4 @@ const fetchMergeFile = async ({ id, coverletter, email, company, content }: Merg
   return data;
 };
 
-export { deleteFile, fetchCoverLetterFile, fetchMergeFile, getCoverLetterTemplate, getOtherFiles, uploadCoverLetterTemplate, uploadOtherFiles };
+export { deleteFile, fetchCoverLetterFile, fetchMergeFile, getOtherFiles, uploadOtherFiles };
