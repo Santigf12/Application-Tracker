@@ -8,6 +8,8 @@ from io import BytesIO
 
 from app.helpers.resume_builder import build_resume
 from app.core.db import get_db
+from app.core.personal import PERSONAL, EDUCATION, PUBLICATIONS
+from app.helpers.profile_data import fetch_full_profile
 
 router = APIRouter()
 
@@ -39,101 +41,6 @@ class ResumeRequest(BaseModel):
     experiences: Optional[list[ExperienceManifest]] = None
     projects: Optional[list[ProjectManifest]] = None
     include_publications: bool = True
-
-
-# ── Hardcoded personal info ───────────────────────────────────────────────────
-
-PERSONAL = {
-    "name": "Santiago Fuentes",
-    "phone": "(825) 365-0075",
-    "email": "jobs@fuentes.it.com",
-    "location": "Calgary, Alberta, T3C 1N6",
-    "links": [
-        {"label": "GitHub", "url": "https://github.com/Santigf12"},
-        {"label": "Personal", "url": "https://santigf12.github.io/"},
-    ],
-}
-
-EDUCATION = [
-    {
-        "degree": "Bachelor of Science in Software Engineering",
-        "institution": "Schulich School of Engineering, University of Calgary | Calgary, Alberta",
-        "date": "Graduated May 2026.",
-    }
-]
-
-PUBLICATIONS = [
-    {
-        "citation": (
-            "Atkin, D., Fuentes, S., & Yadid-Pecht, O. (2025). "
-            "Women in Entrepreneurship: Effective Strategies for Online "
-            "Training and Development. International Journal of Innovative "
-            "Business Strategies, 11(1), 782–789."
-        ),
-        "url": "https://doi.org/10.20533/ijibs.2046.3626.2025.0096",
-    }
-]
-
-
-# ── DB helpers ────────────────────────────────────────────────────────────────
-
-def _fetch_full_profile(db: Session) -> dict:
-    skill_groups = [
-        dict(row._mapping)
-        for row in db.execute(text("""
-            SELECT id, title, position
-            FROM skill_groups
-            ORDER BY position ASC, title ASC
-        """))
-    ]
-    for group in skill_groups:
-        rows = db.execute(text("""
-            SELECT id, name, position
-            FROM skills
-            WHERE skill_group_id = :gid
-            ORDER BY position ASC, name ASC
-        """), {"gid": group["id"]})
-        group["skills"] = [dict(r._mapping) for r in rows]
-
-    experiences = [
-        dict(row._mapping)
-        for row in db.execute(text("""
-            SELECT id, title, company, location, start_date, end_date, description, position
-            FROM experiences
-            ORDER BY position ASC, start_date DESC
-        """))
-    ]
-    for exp in experiences:
-        rows = db.execute(text("""
-            SELECT id, content, position
-            FROM exp_bullets
-            WHERE experience_id = :eid
-            ORDER BY position ASC
-        """), {"eid": exp["id"]})
-        exp["bullets"] = [dict(r._mapping) for r in rows]
-
-    projects = [
-        dict(row._mapping)
-        for row in db.execute(text("""
-            SELECT id, name, start_date, end_date, stack, links, description, position
-            FROM projects
-            ORDER BY position ASC, start_date DESC
-        """))
-    ]
-    for proj in projects:
-        rows = db.execute(text("""
-            SELECT id, content, position
-            FROM proj_bullets
-            WHERE project_id = :pid
-            ORDER BY position ASC
-        """), {"pid": proj["id"]})
-        proj["bullets"] = [dict(r._mapping) for r in rows]
-
-    return {
-        "skill_groups": skill_groups,
-        "experiences": experiences,
-        "projects": projects,
-    }
 
 
 def _build_pool(profile: dict, include_publications: bool = True) -> dict:
@@ -211,7 +118,7 @@ def _build_default_manifest(profile: dict) -> dict:
 @router.post("/generate")
 def generate_resume(req: Optional[ResumeRequest] = None, db: Session = Depends(get_db)):
     try:
-        profile = _fetch_full_profile(db)
+        profile = fetch_full_profile(db) 
         default_manifest = _build_default_manifest(profile)
 
         if req is None:

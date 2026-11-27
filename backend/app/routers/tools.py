@@ -11,6 +11,8 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
+from app.core.personal import EDUCATION, PUBLICATIONS
+from app.helpers.profile_data import fetch_full_profile, format_profile_as_text
 from app.helpers.scraper import scrape_job_posting
 from app.schemas.tools import (
     CoverLetterRequest,
@@ -36,26 +38,6 @@ openai_client = OpenAI(
     api_key=OPENAI_API_KEY,
     organization=OPENAI_ORG_ID or None,
 )
-
-EDUCATION = [
-    {
-        "degree": "Bachelor of Science in Software Engineering",
-        "institution": "Schulich School of Engineering, University of Calgary | Calgary, Alberta",
-        "date": "Graduated May 2026.",
-    }
-]
-
-PUBLICATIONS = [
-    {
-        "citation": (
-            "Atkin, D., Fuentes, S., & Yadid-Pecht, O. (2025). "
-            "Women in Entrepreneurship: Effective Strategies for Online "
-            "Training and Development. International Journal of Innovative "
-            "Business Strategies, 11(1), 782–789."
-        ),
-        "url": "https://doi.org/10.20533/ijibs.2046.3626.2025.0096",
-    }
-]
 
 TAILOR_PROFILE_SCHEMA = {
     "type": "object",
@@ -252,97 +234,18 @@ def clamp_selected_projects(selected_projects: list[dict]) -> list[dict]:
     return clamped
 
 
-def get_full_profile_data(db: Session) -> dict:
-    skill_groups_query = text("""
-        SELECT id, title, position
-        FROM skill_groups
-        ORDER BY position ASC, title ASC;
-    """)
-    skill_groups = [dict(row._mapping) for row in db.execute(skill_groups_query)]
-
-    for group in skill_groups:
-        skills_query = text("""
-            SELECT id, skill_group_id, name, position
-            FROM skills
-            WHERE skill_group_id = :skill_group_id
-            ORDER BY position ASC, name ASC;
-        """)
-        skills = db.execute(skills_query, {"skill_group_id": group["id"]})
-        group["skills"] = [dict(row._mapping) for row in skills]
-
-    experiences_query = text("""
-        SELECT
-            id,
-            title,
-            company,
-            location,
-            start_date,
-            end_date,
-            description,
-            position
-        FROM experiences
-        ORDER BY position ASC, start_date DESC;
-    """)
-    experiences = [dict(row._mapping) for row in db.execute(experiences_query)]
-
-    for exp in experiences:
-        bullets_query = text("""
-            SELECT id, experience_id, content, position
-            FROM exp_bullets
-            WHERE experience_id = :experience_id
-            ORDER BY position ASC;
-        """)
-        bullets = db.execute(bullets_query, {"experience_id": exp["id"]})
-        exp["bullets"] = [dict(row._mapping) for row in bullets]
-
-    projects_query = text("""
-        SELECT
-            id,
-            name,
-            start_date,
-            end_date,
-            stack,
-            links,
-            description,
-            position
-        FROM projects
-        ORDER BY position ASC, start_date DESC;
-    """)
-    projects = [dict(row._mapping) for row in db.execute(projects_query)]
-
-    for project in projects:
-        bullets_query = text("""
-            SELECT id, project_id, content, position
-            FROM proj_bullets
-            WHERE project_id = :project_id
-            ORDER BY position ASC;
-        """)
-        bullets = db.execute(bullets_query, {"project_id": project["id"]})
-        project["bullets"] = [dict(row._mapping) for row in bullets]
-
-    return {
-        "education": EDUCATION,
-        "publications": PUBLICATIONS,
-        "skill_groups": skill_groups,
-        "experiences": experiences,
-        "projects": projects,
-    }
-
-
 @router.post("/cover-letter")
-def generate_cover_letter_content(payload: CoverLetterRequest):
+def generate_cover_letter_content(payload: CoverLetterRequest,  db: Session = Depends(get_db)):
     try:
         company = payload.company
         position = payload.position
         job_posting = payload.jobPosting
 
         if not company or not job_posting:
-            raise HTTPException(
-                status_code=400,
-                detail="Company and job posting details are required",
-            )
+            raise HTTPException(status_code=400, detail="Company and job posting details are required")
 
-        resume_info = get_resume_info()
+        profile = fetch_full_profile(db)
+        resume_info = format_profile_as_text(profile, EDUCATION)
 
         prompt = f"""
 You are an assistant that writes professional cover letters.
@@ -411,7 +314,11 @@ def tailor_profile(payload: TailoredProfileRequest, db: Session = Depends(get_db
                 detail="Position and job posting are required",
             )
 
-        profile = get_full_profile_data(db)
+        profile = {
+            **fetch_full_profile(db),
+            "education": EDUCATION,
+            "publications": PUBLICATIONS,
+        }
 
         prompt = f"""
 You are helping tailor a resume to a specific job posting.

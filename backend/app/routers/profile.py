@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 import uuid
 
 from app.core.db import get_db
+from app.helpers.profile_data import fetch_full_profile
 from app.schemas.profile import (
     SkillGroupCreate,
     SkillGroupUpdate,
@@ -21,78 +22,7 @@ router = APIRouter()
 @router.get("/")
 def get_full_profile(db: Session = Depends(get_db)):
     try:
-        skill_groups_query = text("""
-            SELECT id, title, position
-            FROM skill_groups
-            ORDER BY position ASC, title ASC;
-        """)
-        skill_groups = [dict(row._mapping) for row in db.execute(skill_groups_query)]
-
-        for group in skill_groups:
-            skills_query = text("""
-                SELECT id, skill_group_id, name, position
-                FROM skills
-                WHERE skill_group_id = :skill_group_id
-                ORDER BY position ASC, name ASC;
-            """)
-            skills = db.execute(skills_query, {"skill_group_id": group["id"]})
-            group["skills"] = [dict(row._mapping) for row in skills]
-
-        experiences_query = text("""
-            SELECT
-                id,
-                title,
-                company,
-                location,
-                start_date,
-                end_date,
-                description,
-                position
-            FROM experiences
-            ORDER BY position ASC, start_date DESC;
-        """)
-        experiences = [dict(row._mapping) for row in db.execute(experiences_query)]
-
-        for exp in experiences:
-            bullets_query = text("""
-                SELECT id, experience_id, content, position
-                FROM exp_bullets
-                WHERE experience_id = :experience_id
-                ORDER BY position ASC;
-            """)
-            bullets = db.execute(bullets_query, {"experience_id": exp["id"]})
-            exp["bullets"] = [dict(row._mapping) for row in bullets]
-
-        projects_query = text("""
-            SELECT
-                id,
-                name,
-                start_date,
-                end_date,
-                stack,
-                links,
-                description,
-                position
-            FROM projects
-            ORDER BY position ASC, start_date DESC;
-        """)
-        projects = [dict(row._mapping) for row in db.execute(projects_query)]
-
-        for project in projects:
-            bullets_query = text("""
-                SELECT id, project_id, content, position
-                FROM proj_bullets
-                WHERE project_id = :project_id
-                ORDER BY position ASC;
-            """)
-            bullets = db.execute(bullets_query, {"project_id": project["id"]})
-            project["bullets"] = [dict(row._mapping) for row in bullets]
-
-        return {
-            "skill_groups": skill_groups,
-            "experiences": experiences,
-            "projects": projects,
-        }
+        return fetch_full_profile(db)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

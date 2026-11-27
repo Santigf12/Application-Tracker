@@ -143,61 +143,6 @@ def delete_file(id: str = Query(...)):
         raise HTTPException(status_code=500, detail="Error deleting resume file")
 
 
-@router.post("/upload-cover-letter-template")
-def upload_cover_letter_template(
-    cover_letter_template: UploadFile = File(..., alias="cover-letter-template"),
-):
-    try:
-        if not cover_letter_template.filename:
-            raise HTTPException(status_code=400, detail="No file uploaded.")
-
-        final_name = "Cover_Letter_Template.odt"
-        destination = UPLOADS_DIR / final_name
-        save_upload_file(cover_letter_template, destination)
-
-        return {
-            "uid": cover_letter_template.filename,
-            "name": cover_letter_template.filename,
-            "status": "done",
-            "type": cover_letter_template.content_type,
-        }
-    except HTTPException:
-        raise
-    except Exception as error:
-        print("Error uploading cover letter template:", error)
-        raise HTTPException(
-            status_code=500,
-            detail="Error uploading cover letter template",
-        )
-
-
-@router.get("/cover-letter-template")
-def get_cover_letter_template():
-    try:
-        files = os.listdir(UPLOADS_DIR)
-        cover_letter_templates = [
-            file for file in files if file.startswith("Cover_Letter_Template")
-        ]
-
-        response_data = [
-            {
-                "uid": filename,
-                "name": filename,
-                "status": "done",
-                "type": mimetypes.guess_type(filename)[0] or "application/octet-stream",
-            }
-            for filename in cover_letter_templates
-        ]
-
-        return response_data
-    except Exception as error:
-        print("Error getting cover letter template:", error)
-        raise HTTPException(
-            status_code=500,
-            detail="Error getting cover letter template",
-        )
-
-
 @router.post("/upload-other-files")
 def upload_other_files(
     other_files: UploadFile = File(..., alias="other-files"),

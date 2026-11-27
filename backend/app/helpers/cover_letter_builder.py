@@ -8,6 +8,7 @@ from io import BytesIO
 
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Pt
+from app.core.personal import PERSONAL as PERSONAL_INFO
 
 from app.helpers.resume_builder import (
     _setup_document,
@@ -19,24 +20,6 @@ from app.helpers.resume_builder import (
     COLOUR_BODY,
     COLOUR_SECTION,
 )
-
-
-PERSONAL_INFO = {
-    "name": "Santiago Fuentes",
-    "phone": "(825) 365-0075",
-    "email": "jobs@fuentes.it.com",
-    "location": "Calgary, Alberta, T3C 1N6",
-    "links": [
-        {
-            "label": "GitHub",
-            "url": "https://github.com/Santigf12",
-        },
-        {
-            "label": "Personal",
-            "url": "https://santigf12.github.io/",
-        },
-    ],
-}
 
 
 def _format_today() -> str:
