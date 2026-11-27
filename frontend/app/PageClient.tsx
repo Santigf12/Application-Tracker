@@ -22,8 +22,6 @@ import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { type Key, useCallback, useMemo, useState } from 'react';
 
-const DATE_FORMAT = 'YYYY-MM-DD HH:mm:ss';
-
 const provinceMap: Record<string, string> = {
   AB: 'Alberta',
   BC: 'British Columbia',
@@ -49,24 +47,9 @@ const ProTable = dynamic(
 const parseBackendDate = (value: string | null | undefined) => {
   if (!value) return null;
 
-  const match = value.match(
-    /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/,
-  );
-
-  if (!match) return null;
-
-  const [, year, month, day, hour, minute, second] = match;
-
-  const parsed = dayjs(
-    new Date(
-      Number(year),
-      Number(month) - 1,
-      Number(day),
-      Number(hour),
-      Number(minute),
-      Number(second),
-    ),
-  );
+  // The API sends ISO 8601 in UTC (e.g. 2026-11-26T17:48:45Z).
+  // dayjs parses it as an instant and formats/compares in the browser's zone.
+  const parsed = dayjs(value);
 
   return parsed.isValid() ? parsed : null;
 };

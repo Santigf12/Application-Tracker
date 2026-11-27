@@ -24,26 +24,15 @@ export default function ApplicationTabPage() {
   const deleteMutation = useDeleteApplication();
   const mergeFileMutation = useMergeFile();
 
-  const DATE_FORMAT = 'YYYY-MM-DD HH:mm:ss';
-
   const normalizeDate = (value: unknown): string | undefined => {
     if (!value) return undefined;
 
-    if (dayjs.isDayjs(value)) {
-      return value.format(DATE_FORMAT);
-    }
+    // dayjs object, Date, or a string (ISO with Z, or a local "YYYY-MM-DD HH:mm:ss"
+    // from the editor). dayjs reads zone-less strings as local time, and
+    // toISOString() converts everything to UTC.
+    const parsed = dayjs(value as dayjs.ConfigType);
 
-    if (value instanceof Date) {
-      return dayjs(value).format(DATE_FORMAT);
-    }
-
-    const str = String(value).trim();
-
-    if (dayjs(str).isValid()) {
-      return dayjs(str).format(DATE_FORMAT);
-    }
-
-    return str;
+    return parsed.isValid() ? parsed.toISOString() : undefined;
   };
 
   const handleSave = async (_: unknown, record: Application & { index?: number }) => {
@@ -65,12 +54,11 @@ export default function ApplicationTabPage() {
   };
 
   const handleQuickApply = async () => {
-    const now = dayjs().format(DATE_FORMAT);
 
     const updatedRecord: Application = {
       ...currentApplication,
       status: 'Applied',
-      applied: now,
+      applied: dayjs().toISOString(),
     };
 
     try {

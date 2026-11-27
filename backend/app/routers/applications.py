@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import text
@@ -15,6 +16,43 @@ from app.schemas.applications import (
 
 router = APIRouter()
 
+DATETIME_FIELDS = ("added", "applied")
+
+
+# ── Time helpers ──────────────────────────────────────────────────────────────
+# Contract: the database stores UTC (session time_zone is pinned to +00:00 in
+# core/db.py). The API sends and receives ISO 8601 with an explicit zone, and
+# the browser converts to the viewer's local time.
+
+def utc_now_naive() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+def to_utc_naive(value: datetime | None) -> datetime | None:
+    """Normalize an incoming datetime to naive UTC for storage."""
+    if value is None:
+        return None
+    if value.tzinfo is None:
+        # No zone supplied: assume it is already UTC.
+        return value
+    return value.astimezone(timezone.utc).replace(tzinfo=None)
+
+
+def to_iso_utc(value: datetime | None) -> str | None:
+    """Serialize a naive-UTC datetime from the DB as e.g. 2026-11-26T17:48:45Z."""
+    if value is None:
+        return None
+    return value.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def serialize_row(row: dict) -> dict:
+    for field in DATETIME_FIELDS:
+        if field in row:
+            row[field] = to_iso_utc(row[field])
+    return row
+
+
+# ── Applications ──────────────────────────────────────────────────────────────
 
 @router.get("/")
 def get_all_applications(db: Session = Depends(get_db)):
@@ -24,17 +62,17 @@ def get_all_applications(db: Session = Depends(get_db)):
                 id, 
                 title, 
                 company, 
-                location, 
+                location,
+                url 
                 length, 
-                CAST(added AS CHAR) AS added, 
-                CAST(applied AS CHAR) AS applied, 
+                added, 
+                applied, 
                 status, 
                 posting
             FROM job_applications;
         """)
         result = db.execute(query)
-        rows = [dict(row._mapping) for row in result]
-        return rows
+        return [serialize_row(dict(row._mapping)) for row in result]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -50,8 +88,8 @@ def get_application_by_id(id: str, db: Session = Depends(get_db)):
                 location, 
                 url,
                 length, 
-                CAST(added AS CHAR) AS added,
-                CAST(applied AS CHAR) AS applied,
+                added,
+                applied,
                 status, 
                 posting,
                 coverletter,
@@ -64,7 +102,7 @@ def get_application_by_id(id: str, db: Session = Depends(get_db)):
         if not result:
             raise HTTPException(status_code=404, detail="Application not found")
 
-        return dict(result._mapping)
+        return serialize_row(dict(result._mapping))
     except HTTPException:
         raise
     except Exception as e:
@@ -76,10 +114,10 @@ def create_application(payload: ApplicationCreate, db: Session = Depends(get_db)
     try:
         query = text("""
             INSERT INTO job_applications (
-                title, company, location, length, url, posting, status
+                title, company, location, length, url, posting, status, added
             )
             VALUES (
-                :title, :company, :location, :length, :url, :posting, :status
+                :title, :company, :location, :length, :url, :posting, :status, :added
             );
         """)
 
@@ -93,6 +131,7 @@ def create_application(payload: ApplicationCreate, db: Session = Depends(get_db)
                 "url": payload.url,
                 "posting": payload.posting,
                 "status": payload.status,
+                "added": utc_now_naive(),
             },
         )
         db.commit()
@@ -110,6 +149,9 @@ def update_application(
     db: Session = Depends(get_db),
 ):
     try:
+        applied = to_utc_naive(payload.applied)
+        added = to_utc_naive(payload.added)
+
         query = text("""
             UPDATE job_applications 
             SET
@@ -121,7 +163,7 @@ def update_application(
                 posting = :posting,
                 status = :status,
                 applied = :applied,
-                added = :added
+                added = COALESCE(:added, added)
             WHERE id = :id;
         """)
 
@@ -136,8 +178,8 @@ def update_application(
                 "url": payload.url,
                 "posting": payload.posting,
                 "status": payload.status,
-                "applied": payload.applied,
-                "added": payload.added,
+                "applied": applied,
+                "added": added,
             },
         )
         db.commit()
@@ -150,8 +192,8 @@ def update_application(
             "url": payload.url,
             "posting": payload.posting,
             "status": payload.status,
-            "applied": payload.applied,
-            "added": payload.added,
+            "applied": to_iso_utc(applied),
+            "added": to_iso_utc(added),
         }
     except Exception as e:
         db.rollback()

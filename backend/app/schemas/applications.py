@@ -1,5 +1,6 @@
 from typing import Optional
 from pydantic import BaseModel
+from datetime import datetime
 
 
 class ApplicationCreate(BaseModel):
@@ -20,8 +21,8 @@ class ApplicationUpdate(BaseModel):
     url: Optional[str] = None
     posting: Optional[str] = None
     status: Optional[str] = None
-    applied: Optional[str] = None
-    added: Optional[str] = None
+    applied: Optional[datetime] = None
+    added: Optional[datetime] = None
 
 
 class CoverLetterSave(BaseModel):
