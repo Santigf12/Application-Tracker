@@ -10,6 +10,7 @@ class CoverLetterFileRequest(BaseModel):
 
 
 class MergeFilesRequest(BaseModel):
+    id: Optional[str] = None
     email: Optional[str] = None
     company: Optional[str] = None
     content: Optional[str] = None

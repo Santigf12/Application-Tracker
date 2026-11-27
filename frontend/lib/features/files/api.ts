@@ -1,12 +1,5 @@
 import { api } from "@/lib/api";
-import type {
-    CoverLetterFilePayload,
-    FileItem,
-    MergeFilePayload,
-    UploadCoverLetterTemplatePayload,
-    UploadOtherFilePayload,
-    UploadResumePayload,
-} from "./types";
+import type { CoverLetterFilePayload, FileItem, MergeFilePayload, UploadCoverLetterTemplatePayload, UploadOtherFilePayload } from "./types";
 
 const FILES_PATH = "/pdf";
 
@@ -17,22 +10,6 @@ const toProgressPercent = (loaded: number, total?: number) => {
 
 const fetchCoverLetterFile = async ({ id, email, company, content }: CoverLetterFilePayload): Promise<Blob> => {
   const { data } = await api.post(`${FILES_PATH}/file-cover-letter`, { id, email, company, content }, { responseType: "blob" });
-  return data;
-};
-
-const uploadResumeFile = async ({ id, file, onUploadProgress }: UploadResumePayload): Promise<FileItem> => {
-  const formData = new FormData();
-  formData.append("resume-file", file);
-
-  const { data } = await api.post(`${FILES_PATH}/upload-resume?id=${encodeURIComponent(id)}`, formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-    onUploadProgress: (progressEvent) => {
-      onUploadProgress?.(toProgressPercent(progressEvent.loaded, progressEvent.total));
-    },
-  });
-
   return data;
 };
 
@@ -49,11 +26,6 @@ const uploadCoverLetterTemplate = async ({ file, onUploadProgress }: UploadCover
     },
   });
 
-  return data;
-};
-
-const getResumeFiles = async (): Promise<FileItem[]> => {
-  const { data } = await api.get(`${FILES_PATH}/resume-files`);
   return data;
 };
 
@@ -88,20 +60,9 @@ const getOtherFiles = async (): Promise<FileItem[]> => {
   return data;
 };
 
-const fetchMergeFile = async ({ coverletter, email, company, content }: MergeFilePayload): Promise<Blob> => {
-  const { data } = await api.post(`${FILES_PATH}/merged`, { coverletter, email, company, content }, { responseType: "blob" });
+const fetchMergeFile = async ({ id, coverletter, email, company, content }: MergeFilePayload): Promise<Blob> => {
+  const { data } = await api.post(`${FILES_PATH}/merged`, { id, coverletter, email, company, content }, { responseType: "blob" });
   return data;
 };
 
-export {
-    deleteFile,
-    fetchCoverLetterFile,
-    fetchMergeFile,
-    getCoverLetterTemplate,
-    getOtherFiles,
-    getResumeFiles,
-    uploadCoverLetterTemplate,
-    uploadOtherFiles,
-    uploadResumeFile
-};
-
+export { deleteFile, fetchCoverLetterFile, fetchMergeFile, getCoverLetterTemplate, getOtherFiles, uploadCoverLetterTemplate, uploadOtherFiles };

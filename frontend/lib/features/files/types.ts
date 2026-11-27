@@ -9,12 +9,6 @@ export interface FileItem {
   filePath?: string;
 }
 
-export interface UploadResumePayload {
-  id: string;
-  file: File;
-  onUploadProgress?: (progress: number) => void;
-}
-
 export interface UploadOtherFilePayload {
   id: string;
   file: File;
@@ -34,6 +28,7 @@ export interface CoverLetterFilePayload {
 }
 
 export interface MergeFilePayload {
+  id?: string;
   coverletter: boolean;
   email?: string;
   company?: string;

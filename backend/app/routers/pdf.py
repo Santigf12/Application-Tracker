@@ -4,10 +4,13 @@ import shutil
 import time
 from pathlib import Path
 
-from fastapi import APIRouter, File, HTTPException, Query, UploadFile, BackgroundTasks
+from fastapi import APIRouter, File, HTTPException, Query, UploadFile, BackgroundTasks, Depends
 from fastapi.responses import FileResponse, Response
+from sqlalchemy.orm import Session
 from pypdf import PdfWriter
 
+from app.core.db import get_db
+from app.helpers.resume_data import get_resume_docx
 from app.helpers.file_converter import convert_file
 from app.helpers.cover_letter_builder import generate_cover_letter_docx
 from app.schemas.pdf import CoverLetterFileRequest, MergeFilesRequest
@@ -42,7 +45,6 @@ def create_cover_letter(payload: CoverLetterFileRequest):
             email=payload.email,
             company=payload.company,
             content=payload.content,
-            position=getattr(payload, "position", None),
         )
 
         return Response(
@@ -59,62 +61,6 @@ def create_cover_letter(payload: CoverLetterFileRequest):
     except Exception as error:
         print("Error generating cover letter DOCX:", error)
         raise HTTPException(status_code=500, detail=str(error))
-
-@router.post("/upload-resume")
-def upload_resume( resume_file: UploadFile = File(..., alias="resume-file"), id: str = Query(...), ):
-    try:
-        if not id:
-            raise HTTPException(
-                status_code=400,
-                detail="Missing file ID in query parameters",
-            )
-
-        original_name = resume_file.filename or "resume-file"
-        ext = Path(original_name).suffix
-
-        if "Resume" in original_name:
-            final_name = f"resume-file-{id}{ext}"
-        else:
-            final_name = f"{Path(original_name).stem}-{id}{ext}"
-
-        destination = UPLOADS_DIR / final_name
-        save_upload_file(resume_file, destination)
-
-        return {
-            "uid": id,
-            "name": original_name,
-            "status": "done",
-            "type": resume_file.content_type,
-        }
-    except HTTPException:
-        raise
-    except Exception as error:
-        print("Error uploading Resume:", error)
-        raise HTTPException(status_code=500, detail="Error uploading Resume")
-
-@router.get("/resume-files")
-def get_resume_files():
-    try:
-        files = os.listdir(UPLOADS_DIR)
-
-        resume_files = [file for file in files if file.startswith("resume-file-")]
-
-        response_data = []
-        for filename in resume_files:
-            uid = filename.split("resume-file-")[1].split(".")[0]
-            response_data.append(
-                {
-                    "uid": uid,
-                    "name": "Santiago Fuentes Resume.odt",
-                    "status": "done",
-                    "type": mimetypes.guess_type(filename)[0] or "application/octet-stream",
-                }
-            )
-
-        return response_data
-    except Exception as error:
-        print("Error getting resume files:", error)
-        raise HTTPException(status_code=500, detail="Error getting resume files")
 
 
 @router.delete("/delete-file")
@@ -183,8 +129,6 @@ def get_other_files():
         other_files = [
             file
             for file in files
-            if not file.startswith("resume-file-")
-            and not file.startswith("Cover_Letter_Template")
         ]
 
         response_data = [
@@ -207,94 +151,63 @@ def get_other_files():
 def get_merge_files(
     payload: MergeFilesRequest,
     background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
 ):
-    tmp_resume_odt_path = None
-    resume_pdf_path = None
-    cover_letter_docx_path = None
-    cover_letter_pdf_path = None
-    merged_pdf_path = None
+    temp_paths: list[str] = []
 
     try:
-        email = payload.email
-        company = payload.company
-        content = payload.content
-        coverletter = payload.coverletter
+        stamp = int(time.time() * 1000)
 
-        if coverletter is None:
-            raise HTTPException(status_code=400, detail="Missing coverLetter flag (0 or 1)")
+        # Resume: generate DOCX in memory, write to tmp, convert to PDF
+        resume_docx_path = TMP_DIR / f"resume-{stamp}.docx"
+        resume_docx_path.write_bytes(get_resume_docx(db, payload.id))
+        temp_paths.append(str(resume_docx_path))
 
-        files = os.listdir(UPLOADS_DIR)
-
-        resume_file = next(
-            (
-                file for file in files
-                if "resume" in file.lower() and file.lower().endswith(".odt")
-            ),
-            None,
-        )
-
-        if not resume_file:
-            raise HTTPException(
-                status_code=404,
-                detail="Resume file not found, please upload a resume",
-            )
-
-        transcript_file = next(
-            (
-                file for file in files
-                if "transcript" in file.lower() and file.lower().endswith(".pdf")
-            ),
-            None,
-        )
-
-        resume_path = UPLOADS_DIR / resume_file
-        tmp_resume_odt_path = TMP_DIR / f"resume-temp-{int(time.time() * 1000)}{resume_path.suffix}"
-        shutil.copy2(resume_path, tmp_resume_odt_path)
-
-        resume_pdf_path = convert_file(str(tmp_resume_odt_path))
+        resume_pdf_path = convert_file(str(resume_docx_path))
+        temp_paths.append(resume_pdf_path)
 
         merger = PdfWriter()
         merger.append(resume_pdf_path)
 
-        if coverletter == 1:
-            if not email or not company or not content:
+        # Cover letter (optional)
+        if payload.coverletter == 1:
+            if not payload.email or not payload.company or not payload.content:
                 raise HTTPException(
                     status_code=400,
                     detail="Missing required fields for cover letter generation",
                 )
 
-            docx_buffer = generate_cover_letter_docx(
-                email=email,
-                company=company,
-                content=content,
+            cover_docx_path = TMP_DIR / f"cover-letter-{stamp}.docx"
+            cover_docx_path.write_bytes(
+                generate_cover_letter_docx(
+                    email=payload.email,
+                    company=payload.company,
+                    content=payload.content,
+                )
             )
+            temp_paths.append(str(cover_docx_path))
 
-            cover_letter_docx_path = str(
-                TMP_DIR / f"cover-letter-{int(time.time() * 1000)}.docx"
-            )
+            cover_pdf_path = convert_file(str(cover_docx_path))
+            temp_paths.append(cover_pdf_path)
+            merger.append(cover_pdf_path)
 
-            with open(cover_letter_docx_path, "wb") as f:
-                f.write(docx_buffer)
-
-            cover_letter_pdf_path = convert_file(cover_letter_docx_path)
-            merger.append(cover_letter_pdf_path)
-
+        # Transcript (optional, still an uploaded PDF)
+        transcript_file = next(
+            (
+                f for f in os.listdir(UPLOADS_DIR)
+                if "transcript" in f.lower() and f.lower().endswith(".pdf")
+            ),
+            None,
+        )
         if transcript_file:
-            transcript_path = str(UPLOADS_DIR / transcript_file)
-            merger.append(transcript_path)
+            merger.append(str(UPLOADS_DIR / transcript_file))
 
-        merged_pdf_path = str(TMP_DIR / f"merged-{int(time.time() * 1000)}.pdf")
+        merged_pdf_path = str(TMP_DIR / f"merged-{stamp}.pdf")
         merger.write(merged_pdf_path)
         merger.close()
+        temp_paths.append(merged_pdf_path)
 
-        background_tasks.add_task(
-            cleanup_files,
-            str(tmp_resume_odt_path) if tmp_resume_odt_path else None,
-            resume_pdf_path,
-            cover_letter_docx_path,
-            cover_letter_pdf_path,
-            merged_pdf_path,
-        )
+        background_tasks.add_task(cleanup_files, *temp_paths)
 
         return FileResponse(
             path=merged_pdf_path,
@@ -303,7 +216,9 @@ def get_merge_files(
         )
 
     except HTTPException:
+        cleanup_files(*temp_paths)
         raise
     except Exception as error:
         print("Error merging files:", error)
+        cleanup_files(*temp_paths)
         raise HTTPException(status_code=500, detail="Error merging files")

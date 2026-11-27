@@ -104,6 +104,7 @@ export default function ApplicationTabPage() {
   const handleMergeDownload = async ( hasCoverLetter: boolean, email?: string, company?: string, content?: string, ) => {
     try {
       const response = await mergeFileMutation.mutateAsync({
+        id,
         coverletter: hasCoverLetter,
         email,
         company,
@@ -121,7 +122,7 @@ export default function ApplicationTabPage() {
     } catch (error) {
       notification.error({
         title: 'Error',
-        description: 'Make sure you have a resume uploaded',
+        description: 'Save tailored resume data first',
         placement: 'topLeft',
       });
     }
